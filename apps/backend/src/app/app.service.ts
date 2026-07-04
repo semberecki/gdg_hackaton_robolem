@@ -48,52 +48,7 @@ export class AppService {
       id: principle.id ?? principle.principleId ?? null,
       name: principle.name ?? principle.principleName ?? '',
       description: principle.description ?? principle.principleDescription ?? '',
-      solution: principle.solution ?? '',
     }));
-  }
-
-  private normalizeResult(result: any): any | null {
-    if (!result || typeof result !== 'object') {
-      return result;
-    }
-
-    const principles = Array.isArray(result?.triz?.principles)
-      ? result.triz.principles
-      : [];
-    const flatModifications = Array.isArray(result?.scamper?.modifications)
-      ? result.scamper.modifications
-      : [];
-
-    if (!principles.length || result.solutions) {
-      return result;
-    }
-
-    const solutions = principles.map((principle: any, index: number) => {
-      const principleId = principle.id ?? null;
-      const principleName = principle.name ?? '';
-      const scamperVariants = flatModifications.filter((variant: any) => {
-        if (principleId !== null && variant.principleId === principleId) {
-          return true;
-        }
-        if (principleName && variant.principleName === principleName) {
-          return true;
-        }
-        return variant.solutionIndex === index;
-      });
-
-      return {
-        principleId,
-        principleName,
-        principleDescription: principle.description ?? '',
-        solution: principle.solution ?? '',
-        scamperVariants,
-      };
-    });
-
-    return {
-      ...result,
-      solutions,
-    };
   }
 
   // ==========================================
@@ -147,16 +102,16 @@ export class AppService {
 
         if (modelEvent && modelEvent.content?.parts?.[0]?.text) {
           agentAdvice = modelEvent.content.parts[0].text;
-          structuredResult = this.normalizeResult(this.parseAgentJson(agentAdvice));
+          structuredResult = this.parseAgentJson(agentAdvice);
 
           parsedPrinciples = this.extractPrinciples(structuredResult);
         } else {
           agentAdvice = JSON.stringify(events);
-          structuredResult = this.normalizeResult(this.parseAgentJson(agentAdvice));
+          structuredResult = this.parseAgentJson(agentAdvice);
         }
       } else {
         agentAdvice = JSON.stringify(response.data);
-        structuredResult = this.normalizeResult(this.parseAgentJson(agentAdvice));
+        structuredResult = this.parseAgentJson(agentAdvice);
       }
     } catch (error: any) {
       console.error('Error invoking ADK agent:', error.message);

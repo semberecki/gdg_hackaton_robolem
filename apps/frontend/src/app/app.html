@@ -109,10 +109,10 @@
                   <div>
                     <span class="eyebrow">Structured result</span>
                     <h3 [id]="'result-title-' + messageIndex">
-                      {{ msg.result.solutions.length }} solutions, {{ getVariantCount(msg.result) }} SCAMPER variants
+                      {{ msg.result.solutions.length }} principle groups, {{ getVariantCount(msg.result) }} scored variants
                     </h3>
                   </div>
-                  <span class="result-count" aria-label="Number of generated SCAMPER variants">
+                  <span class="result-count" aria-label="Number of scored variants">
                     {{ getVariantCount(msg.result) }} variants
                   </span>
                 </div>
@@ -120,6 +120,20 @@
                 <p *ngIf="msg.result.summary" class="result-summary">
                   {{ msg.result.summary }}
                 </p>
+
+                <section *ngIf="msg.result.topVariants?.length" class="top-variants" aria-label="Top scored variants">
+                  <h4>Top variants</h4>
+                  <div class="top-variant-grid">
+                    <article *ngFor="let variant of msg.result.topVariants" class="top-variant-card">
+                      <span>{{ variant.label }}</span>
+                      <strong>{{ variant.title }}</strong>
+                      <div class="score-row">
+                        <span class="score-badge">{{ variant.score }}%</span>
+                        <span>{{ variant.scoreLabel }}</span>
+                      </div>
+                    </article>
+                  </div>
+                </section>
 
                 <div class="solution-stack">
                 <article
@@ -134,23 +148,51 @@
                     </h4>
                   </div>
                   <p *ngIf="solution.principleDescription">{{ solution.principleDescription }}</p>
-                  <div class="solution-body">
-                    <strong>Suggested solution</strong>
-                    <p>{{ solution.solution }}</p>
-                  </div>
 
-                  <details *ngIf="solution.scamperVariants?.length" class="variant-details">
-                    <summary>
-                      <span>Show {{ solution.scamperVariants.length }} SCAMPER variants</span>
-                    </summary>
-                    <ol class="variant-list" aria-label="SCAMPER variants">
-                      <li *ngFor="let variant of solution.scamperVariants" class="variant-item">
-                        <span>{{ variant.letter }} - {{ variant.name }}</span>
-                        <p>{{ variant.modifiedSolution }}</p>
-                        <small *ngIf="variant.rationale">{{ variant.rationale }}</small>
-                      </li>
-                    </ol>
-                  </details>
+                  <ol *ngIf="solution.variants?.length" class="variant-list" aria-label="Ranked variants">
+                    <li *ngFor="let variant of solution.variants" class="variant-item">
+                      <div class="variant-header">
+                        <div>
+                          <span class="variant-label">{{ variant.label }}</span>
+                          <h5>{{ variant.title }}</h5>
+                        </div>
+                        <div class="variant-score" [attr.aria-label]="'Score ' + variant.score + ' percent, ' + variant.scoreLabel">
+                          <strong>{{ variant.score }}%</strong>
+                          <span>{{ variant.scoreLabel }}</span>
+                        </div>
+                      </div>
+                      <p>{{ variant.description }}</p>
+                      <small *ngIf="variant.rationale">{{ variant.rationale }}</small>
+                      <div class="score-bar" aria-hidden="true">
+                        <span [style.width]="getScoreWidth(variant)"></span>
+                      </div>
+                      <details *ngIf="variant.scoreBreakdown" class="score-details">
+                        <summary>Score breakdown</summary>
+                        <dl>
+                          <div>
+                            <dt>Reliability</dt>
+                            <dd>{{ variant.scoreBreakdown.reliability }}%</dd>
+                          </div>
+                          <div>
+                            <dt>Capacity scalability</dt>
+                            <dd>{{ variant.scoreBreakdown.capacityScalability }}%</dd>
+                          </div>
+                          <div>
+                            <dt>Deployment speed</dt>
+                            <dd>{{ variant.scoreBreakdown.deploymentSpeed }}%</dd>
+                          </div>
+                          <div>
+                            <dt>Sustainability</dt>
+                            <dd>{{ variant.scoreBreakdown.sustainability }}%</dd>
+                          </div>
+                          <div>
+                            <dt>Maintenance simplicity</dt>
+                            <dd>{{ variant.scoreBreakdown.maintenanceSimplicity }}%</dd>
+                          </div>
+                        </dl>
+                      </details>
+                    </li>
+                  </ol>
                 </article>
                 </div>
 
