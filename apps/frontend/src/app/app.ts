@@ -172,11 +172,7 @@ Your task: propose a way to deliver electricity that is both fast to deploy and 
     this.userInput = prompt;
     this.activeView = 'planner';
     setTimeout(() => {
-      this.planningPrompt?.nativeElement.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
-      this.planningPrompt?.nativeElement.focus();
+      this.planningPrompt?.nativeElement.focus({ preventScroll: true });
     }, 0);
   }
 
