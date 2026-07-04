@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BuildWithAI Solver Design System</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --surface-base: #f7f8fb;
+        --surface-panel: #ffffff;
+        --surface-soft: #eef2f7;
+        --surface-tint: #eaf4ff;
+        --text-strong: #172033;
+        --text-muted: #667085;
+        --text-soft: #8792a2;
+        --line: #dde3ea;
+        --line-strong: #cbd5e1;
+        --brand: #2563eb;
+        --brand-strong: #1d4ed8;
+        --accent: #14b8a6;
+        --warning: #f59e0b;
+        --danger: #dc2626;
+        --radius: 8px;
+        --shadow: 0 18px 44px rgba(23, 32, 51, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at 12% 0%, rgba(37, 99, 235, 0.1), transparent 30rem),
+          linear-gradient(180deg, #fbfcff 0%, var(--surface-base) 42%, #eef2f7 100%);
+        color: var(--text-strong);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        line-height: 1.5;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+        }
+      }
+
+      a,
+      button,
+      input,
+      textarea {
+        font: inherit;
+      }
+
+      a {
+        color: var(--brand);
+      }
+
+      :focus-visible {
+        outline: 3px solid rgba(37, 99, 235, 0.42);
+        outline-offset: 3px;
+      }
+
+      .skip-link {
+        position: fixed;
+        left: 16px;
+        top: 16px;
+        z-index: 20;
+        transform: translateY(-150%);
+        border-radius: var(--radius);
+        background: var(--brand);
+        color: #fff;
+        padding: 10px 14px;
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .skip-link:focus {
+        transform: translateY(0);
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 18px;
+        padding: 14px clamp(18px, 4vw, 56px);
+        border-bottom: 1px solid rgba(221, 227, 234, 0.82);
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(18px);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 40px;
+        height: 40px;
+        place-items: center;
+        border-radius: var(--radius);
+        background: var(--brand);
+        color: #fff;
+        font-weight: 800;
+      }
+
+      .brand strong,
+      .brand small {
+        display: block;
+      }
+
+      .brand small,
+      .muted {
+        color: var(--text-muted);
+      }
+
+      .nav-tabs {
+        display: inline-flex;
+        gap: 4px;
+        padding: 4px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface-soft);
+      }
+
+      .nav-tabs a {
+        min-width: 88px;
+        border-radius: var(--radius);
+        padding: 8px 12px;
+        color: var(--text-muted);
+        font-size: 14px;
+        font-weight: 700;
+        text-align: center;
+        text-decoration: none;
+      }
+
+      .nav-tabs a[aria-current="page"] {
+        background: var(--surface-panel);
+        color: var(--brand);
+        box-shadow: 0 1px 4px rgba(23, 32, 51, 0.08);
+      }
+
+      main {
+        width: min(1180px, calc(100% - 36px));
+        margin: 0 auto;
+        padding: 30px 0 56px;
+      }
+
+      section {
+        margin-top: 18px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: 780px;
+        margin-bottom: 16px;
+        font-size: clamp(38px, 6vw, 68px);
+        line-height: 1;
+      }
+
+      h2 {
+        margin-bottom: 14px;
+        font-size: 24px;
+      }
+
+      h3 {
+        margin-bottom: 8px;
+        font-size: 18px;
+      }
+
+      .eyebrow {
+        display: inline-block;
+        margin-bottom: 10px;
+        color: var(--brand);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .panel,
+      .hero-panel,
+      .metric-card,
+      .component-card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow);
+      }
+
+      .hero-panel {
+        padding: clamp(28px, 5vw, 58px);
+        background:
+          radial-gradient(circle at 82% 18%, rgba(20, 184, 166, 0.18), transparent 11rem),
+          linear-gradient(135deg, #ffffff 0%, #edf5ff 100%);
+      }
+
+      .button-row,
+      .token-grid,
+      .metrics-grid,
+      .component-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .button {
+        min-height: 44px;
+        border: 0;
+        border-radius: var(--radius);
+        padding: 11px 15px;
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .button-primary {
+        background: var(--brand);
+        color: #fff;
+      }
+
+      .button-secondary {
+        border: 1px solid var(--line);
+        background: var(--surface-panel);
+        color: var(--text-strong);
+      }
+
+      .button-danger {
+        background: #fee2e2;
+        color: var(--danger);
+      }
+
+      .token-grid,
+      .metrics-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .component-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .panel,
+      .metric-card,
+      .component-card {
+        padding: 18px;
+      }
+
+      .metric-card span,
+      .metric-card small,
+      .token-card span {
+        display: block;
+        color: var(--text-muted);
+        font-size: 13px;
+      }
+
+      .metric-card strong {
+        display: block;
+        margin: 8px 0 2px;
+        font-size: 32px;
+        line-height: 1;
+      }
+
+      .token-card {
+        min-height: 96px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 14px;
+        background: var(--surface-panel);
+      }
+
+      .swatch {
+        width: 100%;
+        height: 34px;
+        margin-bottom: 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        color: var(--text-muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        background: var(--surface-panel);
+        color: var(--text-strong);
+        padding: 11px 12px;
+      }
+
+      textarea {
+        min-height: 112px;
+        resize: vertical;
+      }
+
+      .field-help {
+        color: var(--text-soft);
+        font-size: 12px;
+      }
+
+      .message {
+        max-width: 680px;
+        border-radius: var(--radius);
+        padding: 14px 16px;
+      }
+
+      .message-user {
+        margin-left: auto;
+        background: var(--brand);
+        color: #fff;
+      }
+
+      .message-assistant {
+        border: 1px solid var(--line);
+        background: #fbfcff;
+      }
+
+      .solution-card,
+      .variant-item {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 12px;
+        background: var(--surface-panel);
+      }
+
+      .solution-card {
+        display: grid;
+        gap: 10px;
+      }
+
+      .solution-body {
+        border-radius: var(--radius);
+        background: var(--surface-tint);
+        padding: 12px;
+      }
+
+      .variant-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      footer {
+        width: min(1180px, calc(100% - 36px));
+        margin: 0 auto;
+        padding: 0 0 36px;
+        color: var(--text-muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 900px) {
+        .topbar,
+        .token-grid,
+        .metrics-grid,
+        .component-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .nav-tabs {
+          width: 100%;
+        }
+
+        .nav-tabs a {
+          flex: 1;
+          min-width: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="BuildWithAI Solver design system home">
+        <span class="brand-mark" aria-hidden="true">AI</span>
+        <span>
+          <strong>BuildWithAI Solver</strong>
+          <small>Accessible light design system</small>
+        </span>
+      </a>
+
+      <nav class="nav-tabs" aria-label="Design system sections">
+        <a href="#overview" aria-current="page">Overview</a>
+        <a href="#tokens">Tokens</a>
+        <a href="#components">Components</a>
+      </nav>
+
+      <div></div>
+    </header>
+
+    <main id="main">
+      <section id="overview" class="hero-panel" aria-labelledby="overview-title">
+        <span class="eyebrow">Design direction</span>
+        <h1 id="overview-title">A light workspace for TRIZ and SCAMPER solution flows.</h1>
+        <p class="muted">
+          The interface uses restrained cards, clear focus states, readable contrast,
+          and compact components for repeated problem-solving sessions.
+        </p>
+        <div class="button-row" aria-label="Primary actions">
+          <a class="button button-primary" href="#components">View components</a>
+          <a class="button button-secondary" href="#tokens">View tokens</a>
+        </div>
+      </section>
+
+      <section class="metrics-grid" aria-label="Example metric cards">
+        <article class="metric-card">
+          <span>TRIZ principles</span>
+          <strong>4</strong>
+          <small>Selected from contradiction</small>
+        </article>
+        <article class="metric-card">
+          <span>SCAMPER variants</span>
+          <strong>28</strong>
+          <small>Grouped under each solution</small>
+        </article>
+        <article class="metric-card">
+          <span>Response shape</span>
+          <strong>JSON</strong>
+          <small>Readable by UI and backend</small>
+        </article>
+        <article class="metric-card">
+          <span>Accessibility</span>
+          <strong>AA</strong>
+          <small>Contrast and keyboard first</small>
+        </article>
+      </section>
+
+      <section id="tokens" class="panel" aria-labelledby="tokens-title">
+        <span class="eyebrow">Foundations</span>
+        <h2 id="tokens-title">Color tokens</h2>
+        <div class="token-grid">
+          <div class="token-card">
+            <div class="swatch" style="background: #2563eb"></div>
+            <strong>Brand</strong>
+            <span>#2563eb</span>
+          </div>
+          <div class="token-card">
+            <div class="swatch" style="background: #14b8a6"></div>
+            <strong>Accent</strong>
+            <span>#14b8a6</span>
+          </div>
+          <div class="token-card">
+            <div class="swatch" style="background: #172033"></div>
+            <strong>Text strong</strong>
+            <span>#172033</span>
+          </div>
+          <div class="token-card">
+            <div class="swatch" style="background: #f7f8fb"></div>
+            <strong>Surface base</strong>
+            <span>#f7f8fb</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="components" class="component-grid" aria-label="Component examples">
+        <article class="component-card" aria-labelledby="buttons-title">
+          <h2 id="buttons-title">Buttons</h2>
+          <div class="button-row">
+            <button class="button button-primary" type="button">Generate</button>
+            <button class="button button-secondary" type="button">Refresh</button>
+            <button class="button button-danger" type="button">Clear</button>
+          </div>
+        </article>
+
+        <article class="component-card" aria-labelledby="form-title">
+          <h2 id="form-title">Form fields</h2>
+          <form class="form-grid">
+            <label for="problem">Problem statement</label>
+            <textarea id="problem" name="problem" aria-describedby="problem-help">We need higher reliability, but cost and maintenance complexity increase.</textarea>
+            <span id="problem-help" class="field-help">Describe what improves and what worsens.</span>
+            <button class="button button-primary" type="submit">Submit</button>
+          </form>
+        </article>
+
+        <article class="component-card" aria-labelledby="conversation-title">
+          <h2 id="conversation-title">Conversation</h2>
+          <div class="message message-user" role="article" aria-label="User message">
+            We need higher reliability, but deployment cost increases.
+          </div>
+          <br />
+          <div class="message message-assistant" role="article" aria-label="Assistant response">
+            Apply TRIZ principle 15, Dynamics: split reliability features into optional modules.
+          </div>
+        </article>
+
+        <article class="component-card" aria-labelledby="solution-title">
+          <h2 id="solution-title">Solution grouping</h2>
+          <div class="solution-card">
+            <strong>Principle 15: Dynamics</strong>
+            <div class="solution-body">
+              Use modular reliability packs that can be enabled only for high-risk deployments.
+            </div>
+            <div class="variant-list" aria-label="SCAMPER variants">
+              <div class="variant-item">
+                <strong>S - Substitute</strong>
+                <p>Replace fixed redundancy with software-controlled failover levels.</p>
+              </div>
+              <div class="variant-item">
+                <strong>E - Eliminate</strong>
+                <p>Remove redundant checks for low-risk deployments.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      Accessibility notes: semantic landmarks, skip link, visible focus states,
+      form labels, no color-only state communication, and reduced-motion support.
+    </footer>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -42,7 +42,9 @@ interface FieldSite {
   styleUrl: './app.css',
 })
 export class App implements OnInit {
-  protected title = 'Rural Electricity Delivery Solution';
+  @ViewChild('planningPrompt') planningPrompt?: ElementRef<HTMLTextAreaElement>;
+
+  protected title = 'BuildWithAI Solver';
 
   backendUrl = '/api';
   showSettings = false;
@@ -50,16 +52,14 @@ export class App implements OnInit {
 
   messages: ChatMessage[] = [];
   userInput =
-    'Plan a resilient microgrid route for three rural villages where rainy-season access is unreliable and demand peaks after sunset.';
+    'We need higher system reliability, but deployment cost and maintenance complexity increase.';
+  sdg7Prompt = `Problem 3: Delivering Electricity to Remote Populations (SDG 7)
+
+Hundreds of millions of people, mostly in rural areas, still lack access to electricity. Centralized power grids deliver stable, high-capacity electricity but are extremely costly and slow to extend across remote, low-density terrain. Alternative approaches like solar panels and battery systems can be deployed quickly almost anywhere, but currently fall short of matching a grid connection's reliability and capacity. Access to electricity underpins healthcare, education, small business, and food storage, impairing community development.
+
+Your task: propose a way to deliver electricity that is both fast to deploy and reliably matches the demand of a growing rural population. And no! Batteries are not a solution. We dont want to produce even more waste.`;
   isLoading = false;
   history: any[] = [];
-
-  metrics = [
-    { label: 'Villages prioritized', value: '18', detail: '+4 ready for survey' },
-    { label: 'Homes in scope', value: '12.4k', detail: '82% first-time access' },
-    { label: 'Projected uptime', value: '96.8%', detail: 'hybrid solar plus storage' },
-    { label: 'Route savings', value: '31%', detail: 'versus radial extension' },
-  ];
 
   routes: DeliveryRoute[] = [
     {
@@ -112,6 +112,12 @@ export class App implements OnInit {
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
   getAssistantText(res: any): string {
+    if (res.result?.solutions?.length) {
+      const solutionCount = res.result.solutions.length;
+      const variantCount = this.getVariantCount(res.result);
+      return `I found ${solutionCount} TRIZ solution${solutionCount === 1 ? '' : 's'} and ${variantCount} SCAMPER variant${variantCount === 1 ? '' : 's'}. Review the grouped results below.`;
+    }
+
     return res.result?.summary || res.result?.finalRecommendations?.join('\n') || res.advice || '';
   }
 
@@ -119,6 +125,15 @@ export class App implements OnInit {
     const summary = log.result?.summary || log.result?.finalRecommendations?.join(' ');
     const text = summary || log.advice || '';
     return text.length > 160 ? `${text.slice(0, 160)}...` : text;
+  }
+
+  getVariantCount(result: any): number {
+    return (
+      result?.solutions?.reduce(
+        (total: number, solution: any) => total + (solution.scamperVariants?.length || 0),
+        0
+      ) || 0
+    );
   }
 
   ngOnInit() {
@@ -129,7 +144,7 @@ export class App implements OnInit {
 
     this.messages.push({
       sender: 'assistant',
-      text: 'Welcome. Describe a village cluster, grid constraint, supply bottleneck, or maintenance risk and I will turn it into a delivery plan using the TRIZ planning backend.',
+      text: 'Welcome. Describe a problem, contradiction, product challenge, or process bottleneck. I will use TRIZ principles and SCAMPER variants to structure possible solutions.',
       timestamp: new Date(),
     });
 
@@ -156,6 +171,9 @@ export class App implements OnInit {
   usePrompt(prompt: string) {
     this.userInput = prompt;
     this.activeView = 'planner';
+    setTimeout(() => {
+      this.planningPrompt?.nativeElement.focus({ preventScroll: true });
+    }, 0);
   }
 
   renderMarkdown(text: string): string {
@@ -170,7 +188,7 @@ export class App implements OnInit {
     html = html.replace(/^## (.*$)/gim, '<h3 class="md-h3">$1</h3>');
     html = html.replace(/^# (.*$)/gim, '<h2 class="md-h2">$1</h2>');
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/^\s*[\*•\-]\s+(.*$)/gim, '<li class="md-li">$1</li>');
+    html = html.replace(/^\s*[*\-]\s+(.*$)/gim, '<li class="md-li">$1</li>');
     html = html.replace(/\n/g, '<br>');
 
     return html;
@@ -187,13 +205,9 @@ export class App implements OnInit {
     this.messages = [
       ...this.messages,
       {
-        sender: 'assistant',
-        text: this.getAssistantText(res),
-        id: res.id,
-        principles: res.principles || [],
-        result: res.result,
-        rating: res.rating || 0,
-        timestamp: new Date(res.createdAt)
+        sender: 'user',
+        text: userText,
+        timestamp: new Date(),
       }
     ];
 
@@ -209,9 +223,10 @@ export class App implements OnInit {
             ...this.messages,
             {
               sender: 'assistant',
-              text: res.advice,
+              text: this.getAssistantText(res),
               id: res.id,
               principles: res.principles || [],
+              result: res.result,
               rating: res.rating || 0,
               timestamp: new Date(res.createdAt || Date.now()),
             },
