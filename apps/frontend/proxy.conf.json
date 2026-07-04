@@ -1,7 +1,7 @@
 {
   "/api": {
-    "target": "http://localhost:3000",
-    "secure": false,
+    "target": "https://buildwithai-backend-f3wgrmxs3q-uc.a.run.app",
+    "secure": true,
     "changeOrigin": true
   }
 }
