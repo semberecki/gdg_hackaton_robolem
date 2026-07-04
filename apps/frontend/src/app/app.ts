@@ -8,6 +8,7 @@ interface ChatMessage {
   text: string;
   id?: string;
   principles?: any[];
+  result?: any;
   rating?: number;
   timestamp: Date;
 }
@@ -60,6 +61,16 @@ export class App implements OnInit {
     html = html.replace(/\n/g, '<br>');
 
     return html;
+  }
+
+  getAssistantText(res: any): string {
+    return res.result?.summary || res.result?.finalRecommendations?.join('\n') || res.advice || '';
+  }
+
+  getHistorySummary(log: any): string {
+    const summary = log.result?.summary || log.result?.finalRecommendations?.join(' ');
+    const text = summary || log.advice || '';
+    return text.length > 160 ? `${text.slice(0, 160)}...` : text;
   }
 
   ngOnInit() {
@@ -126,9 +137,10 @@ this.http.post<any>(`${this.backendUrl}/solve`, {
       ...this.messages,
       {
         sender: 'assistant',
-        text: res.advice,
+        text: this.getAssistantText(res),
         id: res.id,
         principles: res.principles || [],
+        result: res.result,
         rating: res.rating || 0,
         timestamp: new Date(res.createdAt)
       }

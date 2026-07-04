@@ -51,19 +51,45 @@
         <div class="message-bubble">
           <!-- Text Advice body -->
           <div class="message-text" [innerHTML]="renderMarkdown(msg.text)"></div>
-          
-          <!-- Debug Raw Fallback Bridge -->
-          <div *ngIf="msg.sender === 'assistant' && msg.id" style="color: #ef4444; font-size: 13px; margin-top: 10px; font-family: monospace; border-top: 1px dashed rgba(239, 68, 68, 0.3); padding-top: 8px;">
-            [DEBUG RAW ADVICE]: {{ msg.text }}
-          </div>
 
+          <div *ngIf="msg.result?.solutions?.length" class="embedded-principles">
+            <div class="principles-header-mini">SOLUTIONS AND SCAMPER VARIANTS:</div>
+            <div class="mini-principles-grid">
+              <div *ngFor="let solution of msg.result.solutions" class="mini-principle-card">
+                <strong>Principle {{ solution.principleId }}: {{ solution.principleName }}</strong>
+                <p>{{ solution.principleDescription }}</p>
+                <p><strong>Solution:</strong> {{ solution.solution }}</p>
+                <div *ngIf="solution.scamperVariants?.length">
+                  <p><strong>SCAMPER variants:</strong></p>
+                  <div *ngFor="let variant of solution.scamperVariants">
+                    <p><strong>{{ variant.letter }} - {{ variant.name }}:</strong> {{ variant.modifiedSolution }}</p>
+                    <p *ngIf="variant.rationale"><strong>Why:</strong> {{ variant.rationale }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           <!-- Embedded TRIZ details if this response called the MCP server -->
-          <div *ngIf="msg.principles && msg.principles.length > 0" class="embedded-principles">
+          <div *ngIf="!msg.result?.solutions?.length && msg.principles && msg.principles.length > 0" class="embedded-principles">
             <div class="principles-header-mini">🎯 DETERMINISTIC TRIZ PRINCIPLES EXTRACTED FROM MCP:</div>
             <div class="mini-principles-grid">
               <div *ngFor="let p of msg.principles" class="mini-principle-card">
                 <strong>Principle {{ p.id }}: {{ p.name }}</strong>
                 <p>{{ p.description }}</p>
+                <p *ngIf="p.solution"><strong>Solution:</strong> {{ p.solution }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="!msg.result?.solutions?.length && msg.result?.scamper?.modifications?.length" class="embedded-principles">
+            <div class="principles-header-mini">SCAMPER VARIANTS:</div>
+            <div class="mini-principles-grid">
+              <div *ngFor="let variant of msg.result.scamper.modifications" class="mini-principle-card">
+                <strong>{{ variant.letter }} - {{ variant.name }}</strong>
+                <p *ngIf="variant.principleName">From TRIZ: {{ variant.principleName }}</p>
+                <p>{{ variant.modifiedSolution }}</p>
+                <p *ngIf="variant.rationale"><strong>Why:</strong> {{ variant.rationale }}</p>
               </div>
             </div>
           </div>
@@ -136,7 +162,7 @@
             <strong>Prompt:</strong> {{ log.problemDescription }}
           </div>
           <div class="log-response">
-            <strong>Response Summary:</strong> {{ log.advice && log.advice.length > 160 ? (log.advice | slice:0:160) + '...' : (log.advice || '') }}
+            <strong>Response Summary:</strong> {{ getHistorySummary(log) }}
           </div>
         </div>
       </div>
