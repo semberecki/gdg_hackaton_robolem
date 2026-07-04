@@ -1,0 +1,10 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', 'us-central1-docker.pkg.dev/grand-citadel-501407-n4/buildwithai-repo/scamper-mcp-server:latest',
+      './mcp-server-scamper'
+    ]
+    env: ['DOCKER_BUILDKIT=1']
+images:
+  - 'us-central1-docker.pkg.dev/grand-citadel-501407-n4/buildwithai-repo/scamper-mcp-server:latest'

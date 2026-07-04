@@ -17,6 +17,7 @@ model Contradiction {
   improvingParamName  String?  // Optional
   preservingParamName String?  // Optional
   principles          Json?    // Optional - parsed TRIZ principles list: { id, name, description }[]
+  result              Json?    // Optional - structured agent output for UI rendering
   advice              String   // AI Agent response text
   rating              Int?     // Feedback rating (1-5 stars)
   createdAt           DateTime @default(now())

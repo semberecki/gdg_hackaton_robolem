@@ -10,9 +10,9 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  mcp-server:
+  mcp-server-triz:
     build:
-      context: ./mcp-server
+      context: ./mcp-server-triz
       dockerfile: Dockerfile
     environment:
       MCP_HOST: 0.0.0.0
@@ -20,12 +20,25 @@ services:
     ports:
       - "8000:8000"
 
+  mcp-server-scamper:
+    build:
+      context: ./mcp-server-scamper
+      dockerfile: Dockerfile
+    environment:
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 8000
+      MCP_NAME: scamper-mcp-server
+    ports:
+      - "8002:8000"
+
   adk-agent:
     build:
       context: ./adk-agents
       dockerfile: Dockerfile
     environment:
-      MCP_SERVER_URL: http://mcp-server:8000/mcp
+      MCP_SERVER_URL: http://mcp-server-triz:8000/mcp
+      TRIZ_MCP_SERVER_URL: http://mcp-server-triz:8000/mcp
+      SCAMPER_MCP_SERVER_URL: http://mcp-server-scamper:8000/mcp
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
       GOOGLE_GENAI_USE_VERTEXAI: 1
       GOOGLE_CLOUD_PROJECT: r2d2-00
@@ -35,7 +48,8 @@ services:
     volumes:
       - ~/.config/gcloud:/root/.config/gcloud:ro
     depends_on:
-      - mcp-server
+      - mcp-server-triz
+      - mcp-server-scamper
 
   backend:
     build:

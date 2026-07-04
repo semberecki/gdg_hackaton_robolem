@@ -5,7 +5,7 @@ A Model Context Protocol (MCP) server exposing [pytriz](https://github.com/mmysi
 ## Run locally with uv
 
 ```bash
-cp ../.env.example .env   # or create mcp-server/.env directly
+cp ../.env.example .env   # or create mcp-server-triz/.env directly
 uv sync
 uv run python app/main.py
 ```
@@ -20,12 +20,12 @@ From the repo root:
 docker compose up --build
 ```
 
-This builds the image from `mcp-server/Dockerfile` and exposes the server on `http://localhost:8000`.
+This builds the image from `mcp-server-triz/Dockerfile` and exposes the server on `http://localhost:8000`.
 
 To build/run the container directly instead:
 
 ```bash
-cd mcp-server
+cd mcp-server-triz
 docker build -t triz-mcp-server .
 docker run --rm -p 8000:8000 --env-file ../.env triz-mcp-server
 ```

@@ -1,6 +1,6 @@
 from mcp.server.fastmcp import FastMCP
 
-from app.tools.contradictions import (
+from app.tools.contradictions_json import (
     browse_contradiction_matrix,
     get_parameter_by_id,
     get_principle_by_id,

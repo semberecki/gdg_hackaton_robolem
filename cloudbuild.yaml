@@ -8,12 +8,22 @@ steps:
     args: [
       'build',
       '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REGISTRY_NAME}/triz-mcp-server:latest',
-      './mcp-server'
+      './mcp-server-triz'
     ]
     env: ['DOCKER_BUILDKIT=1']
-    id: 'build-mcp-server'
+    id: 'build-mcp-server-triz'
 
-  # B. ADK Agent
+  # B. SCAMPER MCP Server
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REGISTRY_NAME}/scamper-mcp-server:latest',
+      './mcp-server-scamper'
+    ]
+    env: ['DOCKER_BUILDKIT=1']
+    id: 'build-mcp-server-scamper'
+
+  # C. ADK Agent
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
@@ -23,7 +33,7 @@ steps:
     env: ['DOCKER_BUILDKIT=1']
     id: 'build-adk-agent'
 
-  # C. NestJS Backend
+  # D. NestJS Backend
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
@@ -34,7 +44,7 @@ steps:
     env: ['DOCKER_BUILDKIT=1']
     id: 'build-backend'
 
-  # D. Angular Frontend
+  # E. Angular Frontend
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
@@ -50,7 +60,11 @@ steps:
   # ==========================================================================
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REGISTRY_NAME}/triz-mcp-server']
-    id: 'push-mcp-server'
+    id: 'push-mcp-server-triz'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REGISTRY_NAME}/scamper-mcp-server']
+    id: 'push-mcp-server-scamper'
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REGISTRY_NAME}/triz-adk-agent']
