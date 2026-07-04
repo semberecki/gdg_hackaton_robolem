@@ -1,283 +1,170 @@
-<div class="app-shell">
+﻿<div class="app-shell">
   <header class="topbar">
-    <a class="brand" href="#top" aria-label="Rural Electricity Delivery home">
-      <span class="brand-mark">RE</span>
+    <a class="brand" href="#" aria-label="BuildWithAI home" (click)="$event.preventDefault(); setView('overview')">
+      <span class="brand-mark">AI</span>
       <span>
-        <strong>Rural Electricity Delivery</strong>
-        <small>AI-assisted grid planning</small>
+        <strong>BuildWithAI Solver</strong>
+        <small>TRIZ + SCAMPER planning workspace</small>
       </span>
     </a>
 
     <nav class="nav-tabs" aria-label="Primary navigation">
-      <button
-        type="button"
-        [class.active]="activeView === 'overview'"
-        (click)="setView('overview')"
-      >
-        Overview
-      </button>
-      <button
-        type="button"
-        [class.active]="activeView === 'planner'"
-        (click)="setView('planner')"
-      >
-        Planner
-      </button>
-      <button
-        type="button"
-        [class.active]="activeView === 'history'"
-        (click)="setView('history')"
-      >
-        History
-      </button>
+      <button type="button" [class.active]="activeView === 'overview'" (click)="setView('overview')">Overview</button>
+      <button type="button" [class.active]="activeView === 'planner'" (click)="setView('planner')">Planner</button>
+      <button type="button" [class.active]="activeView === 'history'" (click)="setView('history')">History</button>
     </nav>
 
-    <button
-      type="button"
-      class="settings-button"
-      (click)="showSettings = !showSettings"
-    >
-      API settings
+    <button type="button" class="icon-button" (click)="showSettings = !showSettings" aria-label="API settings" title="API settings">
+      Settings
     </button>
   </header>
 
   <section *ngIf="showSettings" class="settings-panel" aria-label="API settings">
     <div>
+      <span class="eyebrow">Configuration</span>
       <h2>Backend endpoint</h2>
-      <p>
-        Use the local proxy or paste your deployed NestJS Cloud Run API endpoint.
-      </p>
+      <p>Use the local proxy or paste the deployed NestJS Cloud Run API endpoint.</p>
     </div>
     <label>
       Endpoint URL
-      <input
-        type="text"
-        [(ngModel)]="backendUrl"
-        placeholder="https://buildwithai-backend-xxxx.run.app/api"
-      />
+      <input type="text" [(ngModel)]="backendUrl" placeholder="https://buildwithai-backend-xxxx.run.app/api" />
     </label>
     <div class="settings-actions">
-      <button type="button" class="primary-action" (click)="saveSettings()">
-        Apply endpoint
-      </button>
-      <button type="button" class="secondary-action" (click)="resetSettings()">
-        Reset
-      </button>
+      <button type="button" class="button button-primary" (click)="saveSettings()">Apply</button>
+      <button type="button" class="button button-secondary" (click)="resetSettings()">Reset</button>
     </div>
   </section>
 
-  <main id="top">
-    <section class="hero-grid" *ngIf="activeView === 'overview'">
-      <div class="hero-copy">
-        <span class="eyebrow">Rural electrification command center</span>
-        <h1>Plan resilient power delivery for hard-to-reach communities.</h1>
+  <main>
+    <section *ngIf="activeView === 'overview'" class="overview-grid">
+      <article class="hero-panel">
+        <span class="eyebrow">Design system draft</span>
+        <h1>Lightweight workspace for structured innovation flows.</h1>
         <p>
-          Prioritize villages, compare hybrid grid routes, protect critical
-          loads, and ask the AI planner to resolve delivery contradictions before
-          teams reach the field.
+          A calmer interface for running TRIZ, expanding selected ideas with SCAMPER,
+          and reading generated variants without a heavy dashboard frame.
         </p>
         <div class="hero-actions">
-          <button
-            type="button"
-            class="primary-action"
-            (click)="usePrompt('Optimize solar storage placement for dispersed homes while keeping maintenance visits below two per month.')"
-          >
-            Start a plan
-          </button>
-          <button
-            type="button"
-            class="secondary-action"
-            (click)="setView('history')"
-          >
-            Review logs
-          </button>
+          <button type="button" class="button button-primary" (click)="setView('planner')">Open planner</button>
         </div>
-      </div>
+      </article>
 
-      <aside class="map-panel" aria-label="Delivery map preview">
-        <div class="map-toolbar">
-          <span>Active delivery model</span>
-          <strong>Hybrid mesh</strong>
+      <aside class="system-card">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">Flow preview</span>
+            <h2>Agent pipeline</h2>
+          </div>
         </div>
-        <div class="map-canvas">
-          <span class="node node-a">Solar</span>
-          <span class="node node-b">Clinic</span>
-          <span class="node node-c">School</span>
-          <span class="node node-d">Village</span>
-          <span class="route route-one"></span>
-          <span class="route route-two"></span>
-          <span class="route route-three"></span>
-        </div>
-        <div class="map-summary">
-          <span>31% lower line length</span>
-          <span>8.6 MWh storage buffer</span>
-        </div>
+        <ol class="flow-list">
+          <li><strong>Problem</strong><span>Backend receives the user prompt.</span></li>
+          <li><strong>TRIZ</strong><span>MCP returns contradiction principles.</span></li>
+          <li><strong>LLM</strong><span>Agent turns principles into solutions.</span></li>
+          <li><strong>SCAMPER</strong><span>Each solution receives variant ideas.</span></li>
+        </ol>
       </aside>
     </section>
 
-    <section class="metrics-grid" *ngIf="activeView === 'overview'">
-      <article *ngFor="let metric of metrics" class="metric-card">
-        <span>{{ metric.label }}</span>
-        <strong>{{ metric.value }}</strong>
-        <small>{{ metric.detail }}</small>
-      </article>
-    </section>
-
-    <figure class="architecture-asset panel" *ngIf="activeView === 'overview'">
-      <div>
-        <span class="eyebrow">Project architecture</span>
-        <h2>Cloud delivery stack</h2>
-      </div>
-    </div>
-  </div>
-
-  <!-- Main Chat Conversation Screen -->
-  <main class="content-area chat-layout">
-    
-    <!-- Active Message Bubble Stream -->
-    <section class="chat-messages-container">
-      <div 
-        *ngFor="let msg of messages" 
-        [class.user-bubble-row]="msg.sender === 'user'"
-        [class.assistant-bubble-row]="msg.sender === 'assistant'"
-        class="message-row"
-      >
-        <div class="message-bubble">
-          <!-- Text Advice body -->
-          <div class="message-text" [innerHTML]="renderMarkdown(msg.text)"></div>
-
-          <div *ngIf="msg.result?.solutions?.length" class="embedded-principles">
-            <div class="principles-header-mini">SOLUTIONS AND SCAMPER VARIANTS:</div>
-            <div class="mini-principles-grid">
-              <div *ngFor="let solution of msg.result.solutions" class="mini-principle-card">
-                <strong>Principle {{ solution.principleId }}: {{ solution.principleName }}</strong>
-                <p>{{ solution.principleDescription }}</p>
-                <p><strong>Solution:</strong> {{ solution.solution }}</p>
-                <div *ngIf="solution.scamperVariants?.length">
-                  <p><strong>SCAMPER variants:</strong></p>
-                  <div *ngFor="let variant of solution.scamperVariants">
-                    <p><strong>{{ variant.letter }} - {{ variant.name }}:</strong> {{ variant.modifiedSolution }}</p>
-                    <p *ngIf="variant.rationale"><strong>Why:</strong> {{ variant.rationale }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Embedded TRIZ details if this response called the MCP server -->
-          <div *ngIf="!msg.result?.solutions?.length && msg.principles && msg.principles.length > 0" class="embedded-principles">
-            <div class="principles-header-mini">🎯 DETERMINISTIC TRIZ PRINCIPLES EXTRACTED FROM MCP:</div>
-            <div class="mini-principles-grid">
-              <div *ngFor="let p of msg.principles" class="mini-principle-card">
-                <strong>Principle {{ p.id }}: {{ p.name }}</strong>
-                <p>{{ p.description }}</p>
-                <p *ngIf="p.solution"><strong>Solution:</strong> {{ p.solution }}</p>
-              </div>
-            </div>
-          </div>
-
-          <div *ngIf="!msg.result?.solutions?.length && msg.result?.scamper?.modifications?.length" class="embedded-principles">
-            <div class="principles-header-mini">SCAMPER VARIANTS:</div>
-            <div class="mini-principles-grid">
-              <div *ngFor="let variant of msg.result.scamper.modifications" class="mini-principle-card">
-                <strong>{{ variant.letter }} - {{ variant.name }}</strong>
-                <p *ngIf="variant.principleName">From TRIZ: {{ variant.principleName }}</p>
-                <p>{{ variant.modifiedSolution }}</p>
-                <p *ngIf="variant.rationale"><strong>Why:</strong> {{ variant.rationale }}</p>
-              </div>
-            </div>
-            <div class="route-stats">
-              <span>{{ route.distance }}</span>
-              <span>{{ route.load }}</span>
-              <span>{{ route.reliability }}</span>
-            </div>
-            <span class="status-pill" [class.status-risk]="route.status === 'At risk'">
-              {{ route.status }}
-            </span>
-          </div>
-        </div>
-      </article>
-
-      <article class="panel site-panel">
-        <div class="panel-heading">
-          <div>
-            <span class="eyebrow">Field readiness</span>
-            <h2>Critical assets</h2>
-          </div>
-        </div>
-
-        <div class="site-list">
-          <div *ngFor="let site of sites" class="site-row">
-            <div>
-              <strong>{{ site.name }}</strong>
-              <span>{{ site.type }}</span>
-            </div>
-            <div>
-              <strong>{{ site.capacity }}</strong>
-              <span>{{ site.state }}</span>
-            </div>
-          </div>
-        </div>
-      </article>
-    </section>
-
-    <section class="planner-layout" *ngIf="activeView === 'planner'">
-      <aside class="planner-context panel">
-        <span class="eyebrow">Planning prompts</span>
-        <h2>Resolve delivery tradeoffs</h2>
-        <p>
-          The backend stores each plan and can return TRIZ principles when it
-          detects a technical contradiction.
-        </p>
-        <button
-          type="button"
-          class="prompt-chip"
-          (click)="usePrompt('We need long-distance coverage to improve, but line losses and maintenance costs worsen.')"
-        >
-          Long routes vs losses
+    <section *ngIf="activeView === 'planner'" class="planner-layout">
+      <aside class="side-panel">
+        <span class="eyebrow">Prompt starters</span>
+        <h2>Frame the contradiction</h2>
+        <p>Pick a starter, adjust the prompt, then generate structured TRIZ and SCAMPER options.</p>
+        <button type="button" class="prompt-chip prompt-chip-featured" (click)="usePrompt(sdg7Prompt)">
+          <strong>Problem 3: Delivering Electricity to Remote Populations (SDG 7)</strong>
+          <span>Fast deployment vs reliable growing demand, without batteries.</span>
         </button>
-        <button
-          type="button"
-          class="prompt-chip"
-          (click)="usePrompt('We need more battery resilience, but upfront cost and replacement logistics degrade.')"
-        >
-          Storage vs cost
-        </button>
-        <button
-          type="button"
-          class="prompt-chip"
-          (click)="usePrompt('We need rapid deployment, but terrain surveys are incomplete and rainy-season access is unreliable.')"
-        >
-          Speed vs uncertainty
-        </button>
+        <button type="button" class="prompt-chip" (click)="usePrompt('We need more automation in support, but customer trust and exception handling degrade.')">Automation vs trust</button>
+        <button type="button" class="prompt-chip" (click)="usePrompt('We need lower infrastructure cost, but response quality and availability degrade.')">Cost vs quality</button>
         <div class="endpoint-note">
           Endpoint
           <code>{{ backendUrl }}</code>
         </div>
       </aside>
 
-      <section class="planner-panel panel">
+      <section class="planner-panel">
         <div class="panel-heading">
           <div>
-            <span class="eyebrow">AI route planner</span>
-            <h2>Delivery conversation</h2>
+            <span class="eyebrow">AI planner</span>
+            <h2>Solution workspace</h2>
           </div>
         </div>
 
-        <div class="planner-thread">
+        <div class="planner-thread" aria-live="polite" aria-label="Planner conversation">
           <div
-            *ngFor="let msg of messages"
+            *ngFor="let msg of messages; let messageIndex = index"
             class="message-row"
             [class.user-bubble-row]="msg.sender === 'user'"
             [class.assistant-bubble-row]="msg.sender === 'assistant'"
           >
-            <div class="message-bubble">
+            <div class="message-bubble" [class.result-message]="msg.result?.solutions?.length">
               <div class="message-text" [innerHTML]="renderMarkdown(msg.text)"></div>
 
-              <div
-                *ngIf="msg.principles && msg.principles.length > 0"
-                class="principles-grid"
+              <section
+                *ngIf="msg.result?.solutions?.length"
+                class="result-panel"
+                [attr.aria-labelledby]="'result-title-' + messageIndex"
               >
+                <div class="result-header">
+                  <div>
+                    <span class="eyebrow">Structured result</span>
+                    <h3 [id]="'result-title-' + messageIndex">
+                      {{ msg.result.solutions.length }} solutions, {{ getVariantCount(msg.result) }} SCAMPER variants
+                    </h3>
+                  </div>
+                  <span class="result-count" aria-label="Number of generated SCAMPER variants">
+                    {{ getVariantCount(msg.result) }} variants
+                  </span>
+                </div>
+
+                <p *ngIf="msg.result.summary" class="result-summary">
+                  {{ msg.result.summary }}
+                </p>
+
+                <div class="solution-stack">
+                <article
+                  *ngFor="let solution of msg.result.solutions; let solutionIndex = index"
+                  class="solution-card"
+                  [attr.aria-labelledby]="'solution-title-' + messageIndex + '-' + solutionIndex"
+                >
+                  <div class="solution-header">
+                    <span>TRIZ principle {{ solution.principleId }}</span>
+                    <h4 [id]="'solution-title-' + messageIndex + '-' + solutionIndex">
+                      {{ solution.principleName }}
+                    </h4>
+                  </div>
+                  <p *ngIf="solution.principleDescription">{{ solution.principleDescription }}</p>
+                  <div class="solution-body">
+                    <strong>Suggested solution</strong>
+                    <p>{{ solution.solution }}</p>
+                  </div>
+
+                  <details *ngIf="solution.scamperVariants?.length" class="variant-details">
+                    <summary>
+                      <span>Show {{ solution.scamperVariants.length }} SCAMPER variants</span>
+                    </summary>
+                    <ol class="variant-list" aria-label="SCAMPER variants">
+                      <li *ngFor="let variant of solution.scamperVariants" class="variant-item">
+                        <span>{{ variant.letter }} - {{ variant.name }}</span>
+                        <p>{{ variant.modifiedSolution }}</p>
+                        <small *ngIf="variant.rationale">{{ variant.rationale }}</small>
+                      </li>
+                    </ol>
+                  </details>
+                </article>
+                </div>
+
+                <section *ngIf="msg.result.finalRecommendations?.length" class="recommendations" aria-label="Final recommendations">
+                  <h4>Final recommendations</h4>
+                  <ul>
+                    <li *ngFor="let recommendation of msg.result.finalRecommendations">
+                      {{ recommendation }}
+                    </li>
+                  </ul>
+                </section>
+              </section>
+
+              <div *ngIf="!msg.result?.solutions?.length && msg.principles?.length" class="principles-grid">
                 <div *ngFor="let p of msg.principles" class="principle-card">
                   <strong>Principle {{ p.id }}: {{ p.name }}</strong>
                   <p>{{ p.description }}</p>
@@ -292,53 +179,46 @@
                     *ngFor="let star of [1, 2, 3, 4, 5]"
                     (click)="rateMessage(msg, star)"
                     [class.filled]="star <= (msg.rating || 0)"
-                  >
-                    ★
-                  </button>
+                    [attr.aria-label]="'Rate response ' + star + ' out of 5'"
+                  >*</button>
                 </div>
               </div>
             </div>
           </div>
-          <div class="log-body">
-            <strong>Prompt:</strong> {{ log.problemDescription }}
-          </div>
-          <div class="log-response">
-            <strong>Response Summary:</strong> {{ getHistorySummary(log) }}
+
+          <div *ngIf="isLoading" class="message-row assistant-bubble-row">
+            <div class="message-bubble typing-bubble"><span></span><span></span><span></span></div>
           </div>
         </div>
 
-        <form class="composer" (ngSubmit)="send()">
+        <form class="composer" (ngSubmit)="send()" #plannerComposer>
+          <label class="sr-only" for="planningPrompt">Problem prompt</label>
           <textarea
+            id="planningPrompt"
             name="planningPrompt"
+            #planningPrompt
             [(ngModel)]="userInput"
             [disabled]="isLoading"
-            rows="3"
-            placeholder="Describe a rural delivery constraint, target villages, capacity need, or field risk..."
+            rows="4"
+            placeholder="Describe a problem, contradiction, product challenge, or process bottleneck..."
           ></textarea>
-          <button
-            type="submit"
-            class="primary-action"
-            [disabled]="isLoading || !userInput.trim()"
-          >
-            Generate plan
-          </button>
+          <button type="submit" class="button button-primary" [disabled]="isLoading || !userInput.trim()">Generate</button>
         </form>
+
       </section>
     </section>
 
-    <section class="history-panel panel" *ngIf="activeView === 'history'">
+    <section *ngIf="activeView === 'history'" class="history-panel">
       <div class="panel-heading">
         <div>
           <span class="eyebrow">Cloud SQL history</span>
-          <h2>Saved delivery plans</h2>
+          <h2>Saved runs</h2>
         </div>
-        <button type="button" class="secondary-action" (click)="loadHistory()">
-          Refresh
-        </button>
+        <button type="button" class="button button-secondary" (click)="loadHistory()">Refresh</button>
       </div>
 
       <div *ngIf="history.length === 0" class="empty-state">
-        <strong>No plans stored yet.</strong>
+        <strong>No runs stored yet.</strong>
         <span>Generate a plan to create the first persisted record.</span>
       </div>
 
@@ -347,18 +227,11 @@
           <div class="history-meta">
             <span>{{ log.createdAt | date: 'medium' }}</span>
             <div class="rating-stars compact">
-              <button
-                type="button"
-                *ngFor="let star of [1, 2, 3, 4, 5]"
-                (click)="rate(log.id, star, undefined, log)"
-                [class.filled]="star <= (log.rating || 0)"
-              >
-                ★
-              </button>
+              <button type="button" *ngFor="let star of [1, 2, 3, 4, 5]" (click)="rate(log.id, star, undefined, log)" [class.filled]="star <= (log.rating || 0)">*</button>
             </div>
           </div>
           <h3>{{ log.problemDescription }}</h3>
-          <p>{{ log.advice }}</p>
+          <p>{{ getHistorySummary(log) }}</p>
         </article>
       </div>
     </section>

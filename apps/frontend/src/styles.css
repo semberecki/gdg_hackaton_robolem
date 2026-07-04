@@ -2,7 +2,7 @@ html,
 body {
   margin: 0;
   min-height: 100%;
-  background: #0f172a;
+  background: #f7f8fb;
 }
 
 body {
@@ -12,7 +12,7 @@ body {
 app-root {
   display: block;
   min-height: 100vh;
-  background: #0f172a;
+  background: #f7f8fb;
 }
 
 * {
