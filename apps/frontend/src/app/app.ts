@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,9 +7,31 @@ interface ChatMessage {
   sender: 'user' | 'assistant';
   text: string;
   id?: string;
-  principles?: any[];
+  principles?: TrizPrinciple[];
   rating?: number;
   timestamp: Date;
+}
+
+interface TrizPrinciple {
+  id: number;
+  name: string;
+  description: string;
+}
+
+interface DeliveryRoute {
+  name: string;
+  status: 'Live' | 'Planning' | 'At risk';
+  households: number;
+  distance: string;
+  load: string;
+  reliability: string;
+}
+
+interface FieldSite {
+  name: string;
+  type: string;
+  capacity: string;
+  state: string;
 }
 
 @Component({
@@ -19,61 +41,85 @@ interface ChatMessage {
   styleUrl: './app.css',
 })
 export class App implements OnInit {
-  protected title = 'BuildWithAI Chat';
-  
-  // Dynamic API configuration - relative path routes through Nginx proxy
+  protected title = 'Rural Electricity Delivery Solution';
+
   backendUrl = '/api';
   showSettings = false;
+  activeView: 'overview' | 'planner' | 'history' = 'overview';
 
-  // Conversational Messages Stream
   messages: ChatMessage[] = [];
-  userInput = '';
+  userInput =
+    'Plan a resilient microgrid route for three rural villages where rainy-season access is unreliable and demand peaks after sunset.';
   isLoading = false;
-
-  // Global solution logs (sidebar/bottom)
   history: any[] = [];
+
+  metrics = [
+    { label: 'Villages prioritized', value: '18', detail: '+4 ready for survey' },
+    { label: 'Homes in scope', value: '12.4k', detail: '82% first-time access' },
+    { label: 'Projected uptime', value: '96.8%', detail: 'hybrid solar plus storage' },
+    { label: 'Route savings', value: '31%', detail: 'versus radial extension' },
+  ];
+
+  routes: DeliveryRoute[] = [
+    {
+      name: 'North ridge feeder',
+      status: 'Live',
+      households: 2840,
+      distance: '42 km',
+      load: '1.8 MW',
+      reliability: '97.4%',
+    },
+    {
+      name: 'River valley microgrid',
+      status: 'Planning',
+      households: 3960,
+      distance: '28 km',
+      load: '2.4 MW',
+      reliability: '95.9%',
+    },
+    {
+      name: 'Forest health corridor',
+      status: 'At risk',
+      households: 1710,
+      distance: '19 km',
+      load: '940 kW',
+      reliability: '91.2%',
+    },
+  ];
+
+  sites: FieldSite[] = [
+    {
+      name: 'Solar hub A',
+      type: 'Generation',
+      capacity: '3.2 MWp',
+      state: 'Commissioned',
+    },
+    {
+      name: 'Battery block B',
+      type: 'Storage',
+      capacity: '8.6 MWh',
+      state: 'Procurement',
+    },
+    {
+      name: 'Clinic priority loop',
+      type: 'Critical load',
+      capacity: '24 facilities',
+      state: 'Design lock',
+    },
+  ];
 
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
-  // Pure-TS lightweight markdown renderer for clean, fast rendering without dependencies
-  renderMarkdown(text: string): string {
-    if (!text) return '';
-    
-    // 1. Escape HTML first to prevent raw script injections (keeps it secure!)
-    let html = text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-
-    // 2. Format Headers (### -> h4, ## -> h3, # -> h2)
-    html = html.replace(/^### (.*$)/gim, '<h4 class="md-h4">$1</h4>');
-    html = html.replace(/^## (.*$)/gim, '<h3 class="md-h3">$1</h3>');
-    html = html.replace(/^# (.*$)/gim, '<h2 class="md-h2">$1</h2>');
-
-    // 3. Format Bold text (**text** -> <strong>text</strong>)
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-    // 4. Format List Items (• or * or - at start of line)
-    html = html.replace(/^\s*[\*•\-]\s+(.*$)/gim, '<li class="md-li">$1</li>');
-
-    // 5. Format Line Breaks
-    html = html.replace(/\n/g, '<br>');
-
-    return html;
-  }
-
   ngOnInit() {
-    // Restore backend URL if saved
     const savedBackendUrl = localStorage.getItem('buildwithai_backend_url');
     if (savedBackendUrl) {
       this.backendUrl = savedBackendUrl;
     }
 
-    // Insert welcome greeting from BuildWithAI
     this.messages.push({
       sender: 'assistant',
-      text: "Hello! I am BuildWithAI, your conversational engineering companion. Ask me general questions, or describe an engineering problem statement (e.g., 'I want speeds to improve, but memory is worsening') to trigger my built-in TRIZ MCP tool and generate customized software recommendations!",
-      timestamp: new Date()
+      text: 'Welcome. Describe a village cluster, grid constraint, supply bottleneck, or maintenance risk and I will turn it into a delivery plan using the TRIZ planning backend.',
+      timestamp: new Date(),
     });
 
     this.loadHistory();
@@ -92,109 +138,130 @@ export class App implements OnInit {
     this.loadHistory();
   }
 
-  // ==========================================
-  // Conversational Dispatcher
-  // ==========================================
+  setView(view: 'overview' | 'planner' | 'history') {
+    this.activeView = view;
+  }
+
+  usePrompt(prompt: string) {
+    this.userInput = prompt;
+    this.activeView = 'planner';
+  }
+
+  renderMarkdown(text: string): string {
+    if (!text) return '';
+
+    let html = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    html = html.replace(/^### (.*$)/gim, '<h4 class="md-h4">$1</h4>');
+    html = html.replace(/^## (.*$)/gim, '<h3 class="md-h3">$1</h3>');
+    html = html.replace(/^# (.*$)/gim, '<h2 class="md-h2">$1</h2>');
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/^\s*[\*•\-]\s+(.*$)/gim, '<li class="md-li">$1</li>');
+    html = html.replace(/\n/g, '<br>');
+
+    return html;
+  }
+
   send() {
     if (!this.userInput.trim() || this.isLoading) return;
 
     const userText = this.userInput.trim();
     this.userInput = '';
     this.isLoading = true;
-// Render user bubble immediately with an immutable array reference
-this.messages = [
-  ...this.messages,
-  {
-    sender: 'user',
-    text: userText,
-    timestamp: new Date()
-  }
-];
+    this.activeView = 'planner';
 
-console.log('Angular solving request initiated for input:', userText);
-this.autoScrollToBottom();
-
-// Fire POST call to backend
-this.http.post<any>(`${this.backendUrl}/solve`, {
-  problemDescription: userText
-}).subscribe({
-  next: (res) => {
-    console.log('Angular received successful JSON payload:', res);
-
-    // Render AI bubble with an immutable array reference
     this.messages = [
       ...this.messages,
       {
-        sender: 'assistant',
-        text: res.advice,
-        id: res.id,
-        principles: res.principles || [],
-        rating: res.rating || 0,
-        timestamp: new Date(res.createdAt)
-      }
+        sender: 'user',
+        text: userText,
+        timestamp: new Date(),
+      },
     ];
 
-    this.isLoading = false;
-    console.log('Angular state updated. isLoading set to false. Pushed assistant message.');
-    this.loadHistory();
-    this.autoScrollToBottom();
-    this.cdr.detectChanges();
-  },
-  error: (err) => {
-    console.error('Angular received HTTP error payload:', err);
-    this.isLoading = false;
-    this.messages = [
-      ...this.messages,
-      {
-        sender: 'assistant',
-        text: `🚨 Failed to contact backend. Please double check your Endpoint under Settings.\n(Error: ${err.message})`,
-        timestamp: new Date()
-      }
-    ];
-    this.autoScrollToBottom();
-    this.cdr.detectChanges();
+    this.autoScrollToPlanner();
+
+    this.http
+      .post<any>(`${this.backendUrl}/solve`, {
+        problemDescription: userText,
+      })
+      .subscribe({
+        next: (res) => {
+          this.messages = [
+            ...this.messages,
+            {
+              sender: 'assistant',
+              text: res.advice,
+              id: res.id,
+              principles: res.principles || [],
+              rating: res.rating || 0,
+              timestamp: new Date(res.createdAt || Date.now()),
+            },
+          ];
+
+          this.isLoading = false;
+          this.loadHistory();
+          this.autoScrollToPlanner();
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.isLoading = false;
+          this.messages = [
+            ...this.messages,
+            {
+              sender: 'assistant',
+              text: `Failed to contact the planning backend. Check the API endpoint in Settings.\n(Error: ${err.message})`,
+              timestamp: new Date(),
+            },
+          ];
+          this.autoScrollToPlanner();
+          this.cdr.detectChanges();
+        },
+      });
   }
-});
-}
 
-autoScrollToBottom() {
-  setTimeout(() => {
-    try {
-      const contentArea = document.querySelector('.content-area');
-      if (contentArea) {
-        contentArea.scrollTo({
-          top: contentArea.scrollHeight,
-          behavior: 'smooth'
-        });
-      }
-    } catch (e) {
-      console.error('Auto-scroll failed:', e);
-    }
-  }, 100);
-}
+  autoScrollToPlanner() {
+    setTimeout(() => {
+      document.querySelector('.planner-thread')?.scrollTo({
+        top: document.querySelector('.planner-thread')?.scrollHeight || 0,
+        behavior: 'smooth',
+      });
+    }, 100);
+  }
 
-loadHistory() {
+  loadHistory() {
     this.http.get<any[]>(`${this.backendUrl}/history`).subscribe({
       next: (data) => {
         this.history = data;
       },
       error: (err) => {
-        console.error('Failed to load global history:', err);
-      }
+        console.error('Failed to load planning history:', err);
+      },
     });
   }
 
   rate(id: string, rating: number, msgItem?: ChatMessage, historyItem?: any) {
-    this.http.post<any>(`${this.backendUrl}/solutions/${id}/rate`, { rating }).subscribe({
-      next: (updatedRecord) => {
-        if (msgItem) {
-          msgItem.rating = rating;
-        }
-        if (historyItem) {
-          historyItem.rating = rating;
-        }
-        this.loadHistory();
-      }
-    });
+    this.http
+      .post<any>(`${this.backendUrl}/solutions/${id}/rate`, { rating })
+      .subscribe({
+        next: () => {
+          if (msgItem) {
+            msgItem.rating = rating;
+          }
+          if (historyItem) {
+            historyItem.rating = rating;
+          }
+          this.loadHistory();
+        },
+      });
+  }
+
+  rateMessage(msg: ChatMessage, rating: number) {
+    if (msg.id) {
+      this.rate(msg.id, rating, msg);
+    }
   }
 }

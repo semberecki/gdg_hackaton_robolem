@@ -12,12 +12,17 @@
       "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/apps/frontend",
+        "index": "apps/frontend/src/index.html",
         "browser": "apps/frontend/src/main.ts",
         "tsConfig": "apps/frontend/tsconfig.app.json",
         "assets": [
           {
             "glob": "**/*",
             "input": "apps/frontend/public"
+          },
+          {
+            "glob": "ArchDesign.png",
+            "input": "."
           }
         ],
         "styles": ["apps/frontend/src/styles.css"]
