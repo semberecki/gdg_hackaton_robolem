@@ -1,38 +1,132 @@
-<div class="app-container">
-  
-  <!-- Modern Header Bar -->
-  <header class="top-nav">
-    <div class="brand">
-      <span class="icon">🌀</span>
-      <h1>BuildWithAI Chat Solver</h1>
-    </div>
-    
-    <div class="nav-actions">
-      <button (click)="showSettings = !showSettings" class="btn-settings" title="Configure Backend API">
-        ⚙️ Settings
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Rural Electricity Delivery home">
+      <span class="brand-mark">RE</span>
+      <span>
+        <strong>Rural Electricity Delivery</strong>
+        <small>AI-assisted grid planning</small>
+      </span>
+    </a>
+
+    <nav class="nav-tabs" aria-label="Primary navigation">
+      <button
+        type="button"
+        [class.active]="activeView === 'overview'"
+        (click)="setView('overview')"
+      >
+        Overview
       </button>
-    </div>
+      <button
+        type="button"
+        [class.active]="activeView === 'planner'"
+        (click)="setView('planner')"
+      >
+        Planner
+      </button>
+      <button
+        type="button"
+        [class.active]="activeView === 'history'"
+        (click)="setView('history')"
+      >
+        History
+      </button>
+    </nav>
+
+    <button
+      type="button"
+      class="settings-button"
+      (click)="showSettings = !showSettings"
+    >
+      API settings
+    </button>
   </header>
 
-  <!-- Endpoint Settings drawer -->
-  <div *ngIf="showSettings" class="settings-drawer">
-    <div class="settings-card">
-      <h3>🔌 Configure Workshop Backend API</h3>
-      <p>Configure the Angular client to talk directly to your own deployed NestJS Cloud Run backend in real-time.</p>
-      
-      <div class="input-group">
-        <label for="backendUrl">NestJS Backend URL (Public Endpoint)</label>
-        <input 
-          type="text" 
-          id="backendUrl" 
-          [(ngModel)]="backendUrl" 
-          placeholder="https://buildwithai-backend-xxxx.run.app/api"
-        >
+  <section *ngIf="showSettings" class="settings-panel" aria-label="API settings">
+    <div>
+      <h2>Backend endpoint</h2>
+      <p>
+        Use the local proxy or paste your deployed NestJS Cloud Run API endpoint.
+      </p>
+    </div>
+    <label>
+      Endpoint URL
+      <input
+        type="text"
+        [(ngModel)]="backendUrl"
+        placeholder="https://buildwithai-backend-xxxx.run.app/api"
+      />
+    </label>
+    <div class="settings-actions">
+      <button type="button" class="primary-action" (click)="saveSettings()">
+        Apply endpoint
+      </button>
+      <button type="button" class="secondary-action" (click)="resetSettings()">
+        Reset
+      </button>
+    </div>
+  </section>
+
+  <main id="top">
+    <section class="hero-grid" *ngIf="activeView === 'overview'">
+      <div class="hero-copy">
+        <span class="eyebrow">Rural electrification command center</span>
+        <h1>Plan resilient power delivery for hard-to-reach communities.</h1>
+        <p>
+          Prioritize villages, compare hybrid grid routes, protect critical
+          loads, and ask the AI planner to resolve delivery contradictions before
+          teams reach the field.
+        </p>
+        <div class="hero-actions">
+          <button
+            type="button"
+            class="primary-action"
+            (click)="usePrompt('Optimize solar storage placement for dispersed homes while keeping maintenance visits below two per month.')"
+          >
+            Start a plan
+          </button>
+          <button
+            type="button"
+            class="secondary-action"
+            (click)="setView('history')"
+          >
+            Review logs
+          </button>
+        </div>
       </div>
 
-      <div class="action-buttons">
-        <button (click)="saveSettings()" class="btn-primary">Apply Endpoint</button>
-        <button (click)="resetSettings()" class="btn-secondary">Reset to Default</button>
+      <aside class="map-panel" aria-label="Delivery map preview">
+        <div class="map-toolbar">
+          <span>Active delivery model</span>
+          <strong>Hybrid mesh</strong>
+        </div>
+        <div class="map-canvas">
+          <span class="node node-a">Solar</span>
+          <span class="node node-b">Clinic</span>
+          <span class="node node-c">School</span>
+          <span class="node node-d">Village</span>
+          <span class="route route-one"></span>
+          <span class="route route-two"></span>
+          <span class="route route-three"></span>
+        </div>
+        <div class="map-summary">
+          <span>31% lower line length</span>
+          <span>8.6 MWh storage buffer</span>
+        </div>
+      </aside>
+    </section>
+
+    <section class="metrics-grid" *ngIf="activeView === 'overview'">
+      <article *ngFor="let metric of metrics" class="metric-card">
+        <span>{{ metric.label }}</span>
+        <strong>{{ metric.value }}</strong>
+        <small>{{ metric.detail }}</small>
+      </article>
+    </section>
+
+    <figure class="architecture-asset panel" *ngIf="activeView === 'overview'">
+      <div>
+        <span class="eyebrow">Project architecture</span>
+        <h2>Cloud delivery stack</h2>
       </div>
     </div>
   </div>
@@ -92,70 +186,117 @@
                 <p *ngIf="variant.rationale"><strong>Why:</strong> {{ variant.rationale }}</p>
               </div>
             </div>
+            <div class="route-stats">
+              <span>{{ route.distance }}</span>
+              <span>{{ route.load }}</span>
+              <span>{{ route.reliability }}</span>
+            </div>
+            <span class="status-pill" [class.status-risk]="route.status === 'At risk'">
+              {{ route.status }}
+            </span>
           </div>
+        </div>
+      </article>
 
-          <!-- Clickable rating stars inside message card -->
-          <div *ngIf="msg.sender === 'assistant' && msg.id" class="message-footer">
-            <span class="timestamp-label">{{ msg.timestamp | date:'shortTime' }}</span>
-            <div class="rating-stars">
-              <span 
-                *ngFor="let star of [1,2,3,4,5]" 
-                (click)="rate(msg.id, star, msg)"
-                [class.filled]="star <= (msg.rating || 0)"
-                class="star"
-              >★</span>
+      <article class="panel site-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">Field readiness</span>
+            <h2>Critical assets</h2>
+          </div>
+        </div>
+
+        <div class="site-list">
+          <div *ngFor="let site of sites" class="site-row">
+            <div>
+              <strong>{{ site.name }}</strong>
+              <span>{{ site.type }}</span>
+            </div>
+            <div>
+              <strong>{{ site.capacity }}</strong>
+              <span>{{ site.state }}</span>
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Animated typing dots spinner -->
-      <div *ngIf="isLoading" class="message-row assistant-bubble-row">
-        <div class="message-bubble typing-bubble">
-          <span class="typing-dot"></span>
-          <span class="typing-dot"></span>
-          <span class="typing-dot"></span>
-        </div>
-      </div>
+      </article>
     </section>
 
-    <!-- Fixed Bottom Messaging Bar -->
-    <footer class="chat-input-bar">
-      <div class="input-wrapper">
-        <input 
-          type="text" 
-          [(ngModel)]="userInput" 
-          (keyup.enter)="send()"
-          [disabled]="isLoading"
-          placeholder="Describe your bottleneck (e.g. 'I want speed to improve, but memory is leaking') or ask general questions..."
-          class="text-input"
+    <section class="planner-layout" *ngIf="activeView === 'planner'">
+      <aside class="planner-context panel">
+        <span class="eyebrow">Planning prompts</span>
+        <h2>Resolve delivery tradeoffs</h2>
+        <p>
+          The backend stores each plan and can return TRIZ principles when it
+          detects a technical contradiction.
+        </p>
+        <button
+          type="button"
+          class="prompt-chip"
+          (click)="usePrompt('We need long-distance coverage to improve, but line losses and maintenance costs worsen.')"
         >
-        <button 
-          (click)="send()" 
-          [disabled]="isLoading || !userInput.trim()" 
-          class="send-btn"
-        >
-          ➔
+          Long routes vs losses
         </button>
-      </div>
-      <div class="footer-badge">
-        Endpoint: <code>{{ backendUrl }}</code>
-      </div>
-    </footer>
+        <button
+          type="button"
+          class="prompt-chip"
+          (click)="usePrompt('We need more battery resilience, but upfront cost and replacement logistics degrade.')"
+        >
+          Storage vs cost
+        </button>
+        <button
+          type="button"
+          class="prompt-chip"
+          (click)="usePrompt('We need rapid deployment, but terrain surveys are incomplete and rainy-season access is unreliable.')"
+        >
+          Speed vs uncertainty
+        </button>
+        <div class="endpoint-note">
+          Endpoint
+          <code>{{ backendUrl }}</code>
+        </div>
+      </aside>
 
-    <!-- Historic SQL Database logs timeline -->
-    <section class="chat-history-drawer">
-      <h3>📂 Global Chat Logs (Cloud SQL Relational History)</h3>
-      <div *ngIf="history.length === 0" class="empty-history">
-        <p>No messages persisted yet. Start typing above to log your first SQL transaction!</p>
-      </div>
+      <section class="planner-panel panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">AI route planner</span>
+            <h2>Delivery conversation</h2>
+          </div>
+        </div>
 
-      <div class="history-grid-mini">
-        <div *ngFor="let log of history" class="history-item-mini">
-          <div class="log-meta">
-            <span class="log-time">{{ log.createdAt | date:'short' }}</span>
-            <div class="log-rating">
-              <span *ngFor="let star of [1,2,3,4,5]" [class.filled]="star <= (log.rating || 0)" class="mini-star">★</span>
+        <div class="planner-thread">
+          <div
+            *ngFor="let msg of messages"
+            class="message-row"
+            [class.user-bubble-row]="msg.sender === 'user'"
+            [class.assistant-bubble-row]="msg.sender === 'assistant'"
+          >
+            <div class="message-bubble">
+              <div class="message-text" [innerHTML]="renderMarkdown(msg.text)"></div>
+
+              <div
+                *ngIf="msg.principles && msg.principles.length > 0"
+                class="principles-grid"
+              >
+                <div *ngFor="let p of msg.principles" class="principle-card">
+                  <strong>Principle {{ p.id }}: {{ p.name }}</strong>
+                  <p>{{ p.description }}</p>
+                </div>
+              </div>
+
+              <div *ngIf="msg.sender === 'assistant' && msg.id" class="message-footer">
+                <span>{{ msg.timestamp | date: 'shortTime' }}</span>
+                <div class="rating-stars" aria-label="Rate response">
+                  <button
+                    type="button"
+                    *ngFor="let star of [1, 2, 3, 4, 5]"
+                    (click)="rateMessage(msg, star)"
+                    [class.filled]="star <= (msg.rating || 0)"
+                  >
+                    ★
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           <div class="log-body">
@@ -165,8 +306,61 @@
             <strong>Response Summary:</strong> {{ getHistorySummary(log) }}
           </div>
         </div>
-      </div>
+
+        <form class="composer" (ngSubmit)="send()">
+          <textarea
+            name="planningPrompt"
+            [(ngModel)]="userInput"
+            [disabled]="isLoading"
+            rows="3"
+            placeholder="Describe a rural delivery constraint, target villages, capacity need, or field risk..."
+          ></textarea>
+          <button
+            type="submit"
+            class="primary-action"
+            [disabled]="isLoading || !userInput.trim()"
+          >
+            Generate plan
+          </button>
+        </form>
+      </section>
     </section>
 
+    <section class="history-panel panel" *ngIf="activeView === 'history'">
+      <div class="panel-heading">
+        <div>
+          <span class="eyebrow">Cloud SQL history</span>
+          <h2>Saved delivery plans</h2>
+        </div>
+        <button type="button" class="secondary-action" (click)="loadHistory()">
+          Refresh
+        </button>
+      </div>
+
+      <div *ngIf="history.length === 0" class="empty-state">
+        <strong>No plans stored yet.</strong>
+        <span>Generate a plan to create the first persisted record.</span>
+      </div>
+
+      <div class="history-list">
+        <article *ngFor="let log of history" class="history-item">
+          <div class="history-meta">
+            <span>{{ log.createdAt | date: 'medium' }}</span>
+            <div class="rating-stars compact">
+              <button
+                type="button"
+                *ngFor="let star of [1, 2, 3, 4, 5]"
+                (click)="rate(log.id, star, undefined, log)"
+                [class.filled]="star <= (log.rating || 0)"
+              >
+                ★
+              </button>
+            </div>
+          </div>
+          <h3>{{ log.problemDescription }}</h3>
+          <p>{{ log.advice }}</p>
+        </article>
+      </div>
+    </section>
   </main>
 </div>
