@@ -1,0 +1,73 @@
+steps:
+  # ==========================================================================
+  # 1. Build Docker Images (with BuildKit Enabled)
+  # ==========================================================================
+  
+  # A. TRIZ MCP Server
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REGISTRY_NAME}/triz-mcp-server:latest',
+      './mcp-server'
+    ]
+    env: ['DOCKER_BUILDKIT=1']
+    id: 'build-mcp-server'
+
+  # B. ADK Agent
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REGISTRY_NAME}/triz-adk-agent:latest',
+      './adk-agents'
+    ]
+    env: ['DOCKER_BUILDKIT=1']
+    id: 'build-adk-agent'
+
+  # C. NestJS Backend
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-f', 'apps/backend/Dockerfile',
+      '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REGISTRY_NAME}/buildwithai-backend:latest',
+      '.'
+    ]
+    env: ['DOCKER_BUILDKIT=1']
+    id: 'build-backend'
+
+  # D. Angular Frontend
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-f', 'apps/frontend/Dockerfile',
+      '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REGISTRY_NAME}/buildwithai-frontend:latest',
+      '.'
+    ]
+    env: ['DOCKER_BUILDKIT=1']
+    id: 'build-frontend'
+
+  # ==========================================================================
+  # 2. Push Images to Artifact Registry
+  # ==========================================================================
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REGISTRY_NAME}/triz-mcp-server']
+    id: 'push-mcp-server'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REGISTRY_NAME}/triz-adk-agent']
+    id: 'push-adk-agent'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REGISTRY_NAME}/buildwithai-backend']
+    id: 'push-backend'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REGISTRY_NAME}/buildwithai-frontend']
+    id: 'push-frontend'
+
+substitutions:
+  _PROJECT_ID: 'gdg-mcp-workshop-2026'
+  _REGION: 'europe-west1'
+  _REGISTRY_NAME: 'buildwithai-registry'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

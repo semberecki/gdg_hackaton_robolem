@@ -1,0 +1,146 @@
+<div class="app-container">
+  
+  <!-- Modern Header Bar -->
+  <header class="top-nav">
+    <div class="brand">
+      <span class="icon">🌀</span>
+      <h1>BuildWithAI Chat Solver</h1>
+    </div>
+    
+    <div class="nav-actions">
+      <button (click)="showSettings = !showSettings" class="btn-settings" title="Configure Backend API">
+        ⚙️ Settings
+      </button>
+    </div>
+  </header>
+
+  <!-- Endpoint Settings drawer -->
+  <div *ngIf="showSettings" class="settings-drawer">
+    <div class="settings-card">
+      <h3>🔌 Configure Workshop Backend API</h3>
+      <p>Configure the Angular client to talk directly to your own deployed NestJS Cloud Run backend in real-time.</p>
+      
+      <div class="input-group">
+        <label for="backendUrl">NestJS Backend URL (Public Endpoint)</label>
+        <input 
+          type="text" 
+          id="backendUrl" 
+          [(ngModel)]="backendUrl" 
+          placeholder="https://buildwithai-backend-xxxx.run.app/api"
+        >
+      </div>
+
+      <div class="action-buttons">
+        <button (click)="saveSettings()" class="btn-primary">Apply Endpoint</button>
+        <button (click)="resetSettings()" class="btn-secondary">Reset to Default</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Chat Conversation Screen -->
+  <main class="content-area chat-layout">
+    
+    <!-- Active Message Bubble Stream -->
+    <section class="chat-messages-container">
+      <div 
+        *ngFor="let msg of messages" 
+        [class.user-bubble-row]="msg.sender === 'user'"
+        [class.assistant-bubble-row]="msg.sender === 'assistant'"
+        class="message-row"
+      >
+        <div class="message-bubble">
+          <!-- Text Advice body -->
+          <div class="message-text" [innerHTML]="renderMarkdown(msg.text)"></div>
+          
+          <!-- Debug Raw Fallback Bridge -->
+          <div *ngIf="msg.sender === 'assistant' && msg.id" style="color: #ef4444; font-size: 13px; margin-top: 10px; font-family: monospace; border-top: 1px dashed rgba(239, 68, 68, 0.3); padding-top: 8px;">
+            [DEBUG RAW ADVICE]: {{ msg.text }}
+          </div>
+
+          <!-- Embedded TRIZ details if this response called the MCP server -->
+          <div *ngIf="msg.principles && msg.principles.length > 0" class="embedded-principles">
+            <div class="principles-header-mini">🎯 DETERMINISTIC TRIZ PRINCIPLES EXTRACTED FROM MCP:</div>
+            <div class="mini-principles-grid">
+              <div *ngFor="let p of msg.principles" class="mini-principle-card">
+                <strong>Principle {{ p.id }}: {{ p.name }}</strong>
+                <p>{{ p.description }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Clickable rating stars inside message card -->
+          <div *ngIf="msg.sender === 'assistant' && msg.id" class="message-footer">
+            <span class="timestamp-label">{{ msg.timestamp | date:'shortTime' }}</span>
+            <div class="rating-stars">
+              <span 
+                *ngFor="let star of [1,2,3,4,5]" 
+                (click)="rate(msg.id, star, msg)"
+                [class.filled]="star <= (msg.rating || 0)"
+                class="star"
+              >★</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Animated typing dots spinner -->
+      <div *ngIf="isLoading" class="message-row assistant-bubble-row">
+        <div class="message-bubble typing-bubble">
+          <span class="typing-dot"></span>
+          <span class="typing-dot"></span>
+          <span class="typing-dot"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Fixed Bottom Messaging Bar -->
+    <footer class="chat-input-bar">
+      <div class="input-wrapper">
+        <input 
+          type="text" 
+          [(ngModel)]="userInput" 
+          (keyup.enter)="send()"
+          [disabled]="isLoading"
+          placeholder="Describe your bottleneck (e.g. 'I want speed to improve, but memory is leaking') or ask general questions..."
+          class="text-input"
+        >
+        <button 
+          (click)="send()" 
+          [disabled]="isLoading || !userInput.trim()" 
+          class="send-btn"
+        >
+          ➔
+        </button>
+      </div>
+      <div class="footer-badge">
+        Endpoint: <code>{{ backendUrl }}</code>
+      </div>
+    </footer>
+
+    <!-- Historic SQL Database logs timeline -->
+    <section class="chat-history-drawer">
+      <h3>📂 Global Chat Logs (Cloud SQL Relational History)</h3>
+      <div *ngIf="history.length === 0" class="empty-history">
+        <p>No messages persisted yet. Start typing above to log your first SQL transaction!</p>
+      </div>
+
+      <div class="history-grid-mini">
+        <div *ngFor="let log of history" class="history-item-mini">
+          <div class="log-meta">
+            <span class="log-time">{{ log.createdAt | date:'short' }}</span>
+            <div class="log-rating">
+              <span *ngFor="let star of [1,2,3,4,5]" [class.filled]="star <= (log.rating || 0)" class="mini-star">★</span>
+            </div>
+          </div>
+          <div class="log-body">
+            <strong>Prompt:</strong> {{ log.problemDescription }}
+          </div>
+          <div class="log-response">
+            <strong>Response Summary:</strong> {{ log.advice && log.advice.length > 160 ? (log.advice | slice:0:160) + '...' : (log.advice || '') }}
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
