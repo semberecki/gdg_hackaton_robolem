@@ -128,33 +128,63 @@
         <span class="eyebrow">Project architecture</span>
         <h2>Cloud delivery stack</h2>
       </div>
-      <img
-        src="ArchDesign.png"
-        alt="Architecture diagram showing Angular frontend, NestJS backend, ADK agent, MCP server, and Cloud SQL"
-      />
-    </figure>
+    </div>
+  </div>
 
-    <section class="operations-grid" *ngIf="activeView === 'overview'">
-      <article class="panel route-panel">
-        <div class="panel-heading">
-          <div>
-            <span class="eyebrow">Route portfolio</span>
-            <h2>Delivery corridors</h2>
+  <!-- Main Chat Conversation Screen -->
+  <main class="content-area chat-layout">
+    
+    <!-- Active Message Bubble Stream -->
+    <section class="chat-messages-container">
+      <div 
+        *ngFor="let msg of messages" 
+        [class.user-bubble-row]="msg.sender === 'user'"
+        [class.assistant-bubble-row]="msg.sender === 'assistant'"
+        class="message-row"
+      >
+        <div class="message-bubble">
+          <!-- Text Advice body -->
+          <div class="message-text" [innerHTML]="renderMarkdown(msg.text)"></div>
+
+          <div *ngIf="msg.result?.solutions?.length" class="embedded-principles">
+            <div class="principles-header-mini">SOLUTIONS AND SCAMPER VARIANTS:</div>
+            <div class="mini-principles-grid">
+              <div *ngFor="let solution of msg.result.solutions" class="mini-principle-card">
+                <strong>Principle {{ solution.principleId }}: {{ solution.principleName }}</strong>
+                <p>{{ solution.principleDescription }}</p>
+                <p><strong>Solution:</strong> {{ solution.solution }}</p>
+                <div *ngIf="solution.scamperVariants?.length">
+                  <p><strong>SCAMPER variants:</strong></p>
+                  <div *ngFor="let variant of solution.scamperVariants">
+                    <p><strong>{{ variant.letter }} - {{ variant.name }}:</strong> {{ variant.modifiedSolution }}</p>
+                    <p *ngIf="variant.rationale"><strong>Why:</strong> {{ variant.rationale }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <button
-            type="button"
-            class="text-action"
-            (click)="usePrompt('Find the safest delivery sequence for at-risk rural feeders during heavy rain season.')"
-          >
-            Ask AI
-          </button>
-        </div>
+          
+          <!-- Embedded TRIZ details if this response called the MCP server -->
+          <div *ngIf="!msg.result?.solutions?.length && msg.principles && msg.principles.length > 0" class="embedded-principles">
+            <div class="principles-header-mini">🎯 DETERMINISTIC TRIZ PRINCIPLES EXTRACTED FROM MCP:</div>
+            <div class="mini-principles-grid">
+              <div *ngFor="let p of msg.principles" class="mini-principle-card">
+                <strong>Principle {{ p.id }}: {{ p.name }}</strong>
+                <p>{{ p.description }}</p>
+                <p *ngIf="p.solution"><strong>Solution:</strong> {{ p.solution }}</p>
+              </div>
+            </div>
+          </div>
 
-        <div class="route-list">
-          <div *ngFor="let route of routes" class="route-row">
-            <div>
-              <strong>{{ route.name }}</strong>
-              <span>{{ route.households | number }} households</span>
+          <div *ngIf="!msg.result?.solutions?.length && msg.result?.scamper?.modifications?.length" class="embedded-principles">
+            <div class="principles-header-mini">SCAMPER VARIANTS:</div>
+            <div class="mini-principles-grid">
+              <div *ngFor="let variant of msg.result.scamper.modifications" class="mini-principle-card">
+                <strong>{{ variant.letter }} - {{ variant.name }}</strong>
+                <p *ngIf="variant.principleName">From TRIZ: {{ variant.principleName }}</p>
+                <p>{{ variant.modifiedSolution }}</p>
+                <p *ngIf="variant.rationale"><strong>Why:</strong> {{ variant.rationale }}</p>
+              </div>
             </div>
             <div class="route-stats">
               <span>{{ route.distance }}</span>
@@ -269,13 +299,11 @@
               </div>
             </div>
           </div>
-
-          <div *ngIf="isLoading" class="message-row assistant-bubble-row">
-            <div class="message-bubble typing-bubble">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
+          <div class="log-body">
+            <strong>Prompt:</strong> {{ log.problemDescription }}
+          </div>
+          <div class="log-response">
+            <strong>Response Summary:</strong> {{ getHistorySummary(log) }}
           </div>
         </div>
 

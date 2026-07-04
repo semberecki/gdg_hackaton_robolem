@@ -7,7 +7,8 @@ interface ChatMessage {
   sender: 'user' | 'assistant';
   text: string;
   id?: string;
-  principles?: TrizPrinciple[];
+  principles?: any[];
+  result?: any;
   rating?: number;
   timestamp: Date;
 }
@@ -110,6 +111,16 @@ export class App implements OnInit {
 
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
+  getAssistantText(res: any): string {
+    return res.result?.summary || res.result?.finalRecommendations?.join('\n') || res.advice || '';
+  }
+
+  getHistorySummary(log: any): string {
+    const summary = log.result?.summary || log.result?.finalRecommendations?.join(' ');
+    const text = summary || log.advice || '';
+    return text.length > 160 ? `${text.slice(0, 160)}...` : text;
+  }
+
   ngOnInit() {
     const savedBackendUrl = localStorage.getItem('buildwithai_backend_url');
     if (savedBackendUrl) {
@@ -176,10 +187,14 @@ export class App implements OnInit {
     this.messages = [
       ...this.messages,
       {
-        sender: 'user',
-        text: userText,
-        timestamp: new Date(),
-      },
+        sender: 'assistant',
+        text: this.getAssistantText(res),
+        id: res.id,
+        principles: res.principles || [],
+        result: res.result,
+        rating: res.rating || 0,
+        timestamp: new Date(res.createdAt)
+      }
     ];
 
     this.autoScrollToPlanner();
