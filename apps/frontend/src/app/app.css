@@ -535,9 +535,21 @@ code {
   padding: 18px;
 }
 
+.solution-card {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(37, 99, 235, 0.22);
+  background: #f8fbff;
+  box-shadow: inset 5px 0 0 var(--brand);
+}
+
 .solution-header {
   display: grid;
   gap: 6px;
+  margin: -18px -18px 18px;
+  padding: 18px 18px 16px 24px;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.16);
+  background: #eef6ff;
 }
 
 .solution-header span,
@@ -555,6 +567,11 @@ code {
   line-height: 1.25;
 }
 
+.solution-card > p {
+  margin: 0 0 14px;
+  padding-left: 6px;
+}
+
 .variant-list {
   margin: 18px 0 0;
   padding: 0;
@@ -565,7 +582,7 @@ code {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 16px;
-  background: #fbfcff;
+  background: var(--surface-panel);
 }
 
 .variant-header,
