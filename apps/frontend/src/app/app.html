@@ -1,239 +1,98 @@
-﻿<div class="app-shell">
+<!-- eslint-disable @angular-eslint/template/prefer-control-flow -->
+<div class="app-shell">
   <header class="topbar">
-    <a class="brand" href="#" aria-label="BuildWithAI home" (click)="$event.preventDefault(); setView('overview')">
+    <button type="button" class="brand" (click)="setView('tool')" aria-label="Build with AI Wroclaw tool">
       <span class="brand-mark">AI</span>
-      <span>
-        <strong>BuildWithAI Solver</strong>
-        <small>TRIZ + SCAMPER planning workspace</small>
-      </span>
-    </a>
-
-    <nav class="nav-tabs" aria-label="Primary navigation">
-      <button type="button" [class.active]="activeView === 'overview'" (click)="setView('overview')">Overview</button>
-      <button type="button" [class.active]="activeView === 'planner'" (click)="setView('planner')">Planner</button>
-      <button type="button" [class.active]="activeView === 'history'" (click)="setView('history')">History</button>
-    </nav>
-
-    <button type="button" class="icon-button" (click)="showSettings = !showSettings" aria-label="API settings" title="API settings">
-      Settings
+      <span>Build with AI Wrocław</span>
     </button>
+
+    <nav class="mode-switch" aria-label="Primary navigation">
+      <button type="button" [class.active]="activeView === 'tool'" (click)="setView('tool')">Tool</button>
+      <button type="button" [class.active]="activeView === 'eventStorming'" (click)="setView('eventStorming')">
+        Event Storming
+      </button>
+      <button type="button" class="theme-button" aria-label="Toggle theme">◐</button>
+    </nav>
   </header>
 
-  <section *ngIf="showSettings" class="settings-panel" aria-label="API settings">
-    <div>
-      <span class="eyebrow">Configuration</span>
-      <h2>Backend endpoint</h2>
-      <p>Use the local proxy or paste the deployed NestJS Cloud Run API endpoint.</p>
-    </div>
-    <label>
-      Endpoint URL
-      <input type="text" [(ngModel)]="backendUrl" placeholder="https://buildwithai-backend-xxxx.run.app/api" />
-    </label>
-    <div class="settings-actions">
-      <button type="button" class="button button-primary" (click)="saveSettings()">Apply</button>
-      <button type="button" class="button button-secondary" (click)="resetSettings()">Reset</button>
-    </div>
-  </section>
-
   <main>
-    <section *ngIf="activeView === 'overview'" class="overview-grid">
-      <article class="hero-panel">
-        <span class="eyebrow">Design system draft</span>
-        <h1>Lightweight workspace for structured innovation flows.</h1>
-        <p>
-          A calmer interface for running TRIZ, expanding selected ideas with SCAMPER,
-          and reading generated variants without a heavy dashboard frame.
-        </p>
-        <div class="hero-actions">
-          <button type="button" class="button button-primary" (click)="setView('planner')">Open planner</button>
-        </div>
-      </article>
+    <section *ngIf="activeView === 'tool'" class="tool-page">
+      <section class="hero">
+        <p class="overline"><span></span> TRIZ + SCAMPER + LLM Judge Pipeline</p>
+        <h1>Build with AI Wrocław</h1>
+        <p class="subtitle">Architecting the Future of Products · Hackathon from Google Developers Group</p>
+      </section>
 
-      <aside class="system-card">
-        <div class="panel-heading">
-          <div>
-            <span class="eyebrow">Flow preview</span>
-            <h2>Agent pipeline</h2>
-          </div>
-        </div>
-        <ol class="flow-list">
-          <li><strong>Problem</strong><span>Backend receives the user prompt.</span></li>
-          <li><strong>TRIZ</strong><span>MCP returns contradiction principles.</span></li>
-          <li><strong>LLM</strong><span>Agent turns principles into solutions.</span></li>
-          <li><strong>SCAMPER</strong><span>Each solution receives variant ideas.</span></li>
-        </ol>
-      </aside>
-    </section>
+      <ol class="pipeline" aria-label="Solution pipeline">
+        <li *ngFor="let step of pipelineSteps">
+          <span>{{ step.id }}</span>
+          <strong>{{ step.label }}</strong>
+        </li>
+      </ol>
 
-    <section *ngIf="activeView === 'planner'" class="planner-layout">
-      <aside class="side-panel">
-        <span class="eyebrow">Prompt starters</span>
-        <h2>Frame the contradiction</h2>
-        <p>Pick a starter, adjust the prompt, then generate structured TRIZ and SCAMPER options.</p>
-        <button type="button" class="prompt-chip prompt-chip-featured" (click)="usePrompt(sdg7Prompt)">
-          <strong>Problem 3: Delivering Electricity to Remote Populations (SDG 7)</strong>
-          <span>Fast deployment vs reliable growing demand, without batteries.</span>
+      <section class="problem-panel">
+        <p class="section-label">Problem Definition</p>
+        <label for="planningPrompt">
+          Describe your engineering or design challenge <span>(minimum 20 characters)</span>
+        </label>
+        <textarea
+          id="planningPrompt"
+          name="planningPrompt"
+          #planningPrompt
+          [(ngModel)]="userInput"
+          [disabled]="isLoading"
+          rows="6"
+          placeholder="Describe the engineering or design challenge you want to solve..."
+        ></textarea>
+      </section>
+
+      <section class="example-gallery">
+        <p class="section-label">Example Gallery</p>
+        <button type="button" *ngFor="let example of examples" (click)="usePrompt(example)">
+          {{ example }}
         </button>
-        <button type="button" class="prompt-chip" (click)="usePrompt('We need more automation in support, but customer trust and exception handling degrade.')">Automation vs trust</button>
-        <button type="button" class="prompt-chip" (click)="usePrompt('We need lower infrastructure cost, but response quality and availability degrade.')">Cost vs quality</button>
-        <div class="endpoint-note">
-          Endpoint
-          <code>{{ backendUrl }}</code>
-        </div>
-      </aside>
+      </section>
 
-      <section class="planner-panel">
-        <div class="panel-heading">
-          <div>
-            <span class="eyebrow">AI planner</span>
-            <h2>Solution workspace</h2>
-          </div>
-        </div>
+      <div class="action-row">
+        <button type="button" class="primary-action" [disabled]="isLoading || userInput.trim().length < 20" (click)="send()">
+          {{ isLoading ? 'Running pipeline...' : 'Run AI pipeline' }}
+        </button>
+        <p>01 Problem &gt; 02 TRIZ &gt; 03 SCAMPER &gt; 04 Judge &gt; 05 Results</p>
+      </div>
 
-        <div class="planner-thread" aria-live="polite" aria-label="Planner conversation">
-          <div
-            *ngFor="let msg of messages; let messageIndex = index"
-            class="message-row"
-            [class.user-bubble-row]="msg.sender === 'user'"
-            [class.assistant-bubble-row]="msg.sender === 'assistant'"
-          >
-            <div class="message-bubble" [class.result-message]="msg.result?.solutions?.length">
-              <div class="message-text" [innerHTML]="renderMarkdown(msg.text)"></div>
+      <section class="conversation" aria-live="polite">
+        <article *ngFor="let msg of messages" class="message" [class.user]="msg.sender === 'user'">
+          <div class="message-text" [innerHTML]="renderMarkdown(msg.text)"></div>
 
-              <section
-                *ngIf="msg.result?.solutions?.length"
-                class="result-panel"
-                [attr.aria-labelledby]="'result-title-' + messageIndex"
-              >
-                <div class="result-header">
-                  <div>
-                    <span class="eyebrow">Structured result</span>
-                    <h3 [id]="'result-title-' + messageIndex">
-                      {{ msg.result.solutions.length }} solutions, {{ getVariantCount(msg.result) }} SCAMPER variants
-                    </h3>
-                  </div>
-                  <span class="result-count" aria-label="Number of generated SCAMPER variants">
-                    {{ getVariantCount(msg.result) }} variants
-                  </span>
-                </div>
-
-                <p *ngIf="msg.result.summary" class="result-summary">
-                  {{ msg.result.summary }}
-                </p>
-
-                <div class="solution-stack">
-                <article
-                  *ngFor="let solution of msg.result.solutions; let solutionIndex = index"
-                  class="solution-card"
-                  [attr.aria-labelledby]="'solution-title-' + messageIndex + '-' + solutionIndex"
-                >
-                  <div class="solution-header">
-                    <span>TRIZ principle {{ solution.principleId }}</span>
-                    <h4 [id]="'solution-title-' + messageIndex + '-' + solutionIndex">
-                      {{ solution.principleName }}
-                    </h4>
-                  </div>
-                  <p *ngIf="solution.principleDescription">{{ solution.principleDescription }}</p>
-                  <div class="solution-body">
-                    <strong>Suggested solution</strong>
-                    <p>{{ solution.solution }}</p>
-                  </div>
-
-                  <details *ngIf="solution.scamperVariants?.length" class="variant-details">
-                    <summary>
-                      <span>Show {{ solution.scamperVariants.length }} SCAMPER variants</span>
-                    </summary>
-                    <ol class="variant-list" aria-label="SCAMPER variants">
-                      <li *ngFor="let variant of solution.scamperVariants" class="variant-item">
-                        <span>{{ variant.letter }} - {{ variant.name }}</span>
-                        <p>{{ variant.modifiedSolution }}</p>
-                        <small *ngIf="variant.rationale">{{ variant.rationale }}</small>
-                      </li>
-                    </ol>
-                  </details>
-                </article>
-                </div>
-
-                <section *ngIf="msg.result.finalRecommendations?.length" class="recommendations" aria-label="Final recommendations">
-                  <h4>Final recommendations</h4>
-                  <ul>
-                    <li *ngFor="let recommendation of msg.result.finalRecommendations">
-                      {{ recommendation }}
-                    </li>
-                  </ul>
-                </section>
-              </section>
-
-              <div *ngIf="!msg.result?.solutions?.length && msg.principles?.length" class="principles-grid">
-                <div *ngFor="let p of msg.principles" class="principle-card">
-                  <strong>Principle {{ p.id }}: {{ p.name }}</strong>
-                  <p>{{ p.description }}</p>
-                </div>
-              </div>
-
-              <div *ngIf="msg.sender === 'assistant' && msg.id" class="message-footer">
-                <span>{{ msg.timestamp | date: 'shortTime' }}</span>
-                <div class="rating-stars" aria-label="Rate response">
-                  <button
-                    type="button"
-                    *ngFor="let star of [1, 2, 3, 4, 5]"
-                    (click)="rateMessage(msg, star)"
-                    [class.filled]="star <= (msg.rating || 0)"
-                    [attr.aria-label]="'Rate response ' + star + ' out of 5'"
-                  >*</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div *ngIf="isLoading" class="message-row assistant-bubble-row">
-            <div class="message-bubble typing-bubble"><span></span><span></span><span></span></div>
-          </div>
-        </div>
-
-        <form class="composer" (ngSubmit)="send()" #plannerComposer>
-          <label class="sr-only" for="planningPrompt">Problem prompt</label>
-          <textarea
-            id="planningPrompt"
-            name="planningPrompt"
-            #planningPrompt
-            [(ngModel)]="userInput"
-            [disabled]="isLoading"
-            rows="4"
-            placeholder="Describe a problem, contradiction, product challenge, or process bottleneck..."
-          ></textarea>
-          <button type="submit" class="button button-primary" [disabled]="isLoading || !userInput.trim()">Generate</button>
-        </form>
-
+          <section *ngIf="msg.result?.solutions?.length" class="result-panel">
+            <header>
+              <p class="section-label">05 Results</p>
+              <h2>{{ msg.result.solutions.length }} solutions · {{ getVariantCount(msg.result) }} variants</h2>
+            </header>
+            <p *ngIf="msg.result.summary" class="result-summary">{{ msg.result.summary }}</p>
+            <article *ngFor="let solution of msg.result.solutions" class="solution-card">
+              <span>TRIZ principle {{ solution.principleId }}</span>
+              <h3>{{ solution.principleName }}</h3>
+              <p>{{ solution.solution }}</p>
+            </article>
+          </section>
+        </article>
       </section>
     </section>
 
-    <section *ngIf="activeView === 'history'" class="history-panel">
-      <div class="panel-heading">
-        <div>
-          <span class="eyebrow">Cloud SQL history</span>
-          <h2>Saved runs</h2>
-        </div>
-        <button type="button" class="button button-secondary" (click)="loadHistory()">Refresh</button>
-      </div>
+    <section *ngIf="activeView === 'eventStorming'" class="event-page">
+      <section class="hero compact">
+        <p class="overline"><span></span> Collaborative Discovery</p>
+        <h1>Event Storming</h1>
+        <p class="subtitle">Map the rural electricity problem before running the AI solution pipeline.</p>
+      </section>
 
-      <div *ngIf="history.length === 0" class="empty-state">
-        <strong>No runs stored yet.</strong>
-        <span>Generate a plan to create the first persisted record.</span>
-      </div>
-
-      <div class="history-list">
-        <article *ngFor="let log of history" class="history-item">
-          <div class="history-meta">
-            <span>{{ log.createdAt | date: 'medium' }}</span>
-            <div class="rating-stars compact">
-              <button type="button" *ngFor="let star of [1, 2, 3, 4, 5]" (click)="rate(log.id, star, undefined, log)" [class.filled]="star <= (log.rating || 0)">*</button>
-            </div>
-          </div>
-          <h3>{{ log.problemDescription }}</h3>
-          <p>{{ getHistorySummary(log) }}</p>
+      <section class="storm-board">
+        <article *ngFor="let card of stormCards" class="storm-card" [ngClass]="card.tone">
+          <span>{{ card.label }}</span>
+          <p>{{ card.text }}</p>
         </article>
-      </div>
+      </section>
     </section>
   </main>
 </div>

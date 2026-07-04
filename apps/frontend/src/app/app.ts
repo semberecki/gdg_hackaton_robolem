@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -35,6 +35,23 @@ interface FieldSite {
   state: string;
 }
 
+interface StormCard {
+  label: string;
+  text: string;
+  tone: 'event' | 'command' | 'policy' | 'risk';
+}
+
+interface TimelineStep {
+  phase: string;
+  outcome: string;
+  owner: string;
+}
+
+interface PipelineStep {
+  id: string;
+  label: string;
+}
+
 @Component({
   imports: [CommonModule, FormsModule],
   selector: 'app-root',
@@ -44,15 +61,17 @@ interface FieldSite {
 export class App implements OnInit {
   @ViewChild('planningPrompt') planningPrompt?: ElementRef<HTMLTextAreaElement>;
 
-  protected title = 'BuildWithAI Solver';
+  private http = inject(HttpClient);
+  private cdr = inject(ChangeDetectorRef);
+
+  protected title = 'Build with AI Wroclaw';
 
   backendUrl = '/api';
   showSettings = false;
-  activeView: 'overview' | 'planner' | 'history' = 'overview';
+  activeView: 'tool' | 'eventStorming' = 'tool';
 
   messages: ChatMessage[] = [];
-  userInput =
-    'We need higher system reliability, but deployment cost and maintenance complexity increase.';
+  userInput = '';
   sdg7Prompt = `Problem 3: Delivering Electricity to Remote Populations (SDG 7)
 
 Hundreds of millions of people, mostly in rural areas, still lack access to electricity. Centralized power grids deliver stable, high-capacity electricity but are extremely costly and slow to extend across remote, low-density terrain. Alternative approaches like solar panels and battery systems can be deployed quickly almost anywhere, but currently fall short of matching a grid connection's reliability and capacity. Access to electricity underpins healthcare, education, small business, and food storage, impairing community development.
@@ -60,6 +79,20 @@ Hundreds of millions of people, mostly in rural areas, still lack access to elec
 Your task: propose a way to deliver electricity that is both fast to deploy and reliably matches the demand of a growing rural population. And no! Batteries are not a solution. We dont want to produce even more waste.`;
   isLoading = false;
   history: any[] = [];
+
+  pipelineSteps: PipelineStep[] = [
+    { id: '01', label: 'Problem' },
+    { id: '02', label: 'TRIZ' },
+    { id: '03', label: 'SCAMPER' },
+    { id: '04', label: 'Judge' },
+    { id: '05', label: 'Results' },
+  ];
+
+  examples = [
+    'Extending electricity access to remote rural villages without expensive grid infrastructure and without using batteries.',
+    'Reducing maintenance cost while keeping rural clinic refrigeration and lighting reliable during faults.',
+    'Deploying a village-scale energy system quickly while demand grows after businesses receive power.',
+  ];
 
   routes: DeliveryRoute[] = [
     {
@@ -96,10 +129,10 @@ Your task: propose a way to deliver electricity that is both fast to deploy and 
       state: 'Commissioned',
     },
     {
-      name: 'Battery block B',
-      type: 'Storage',
-      capacity: '8.6 MWh',
-      state: 'Procurement',
+      name: 'Biomass firming unit',
+      type: 'Dispatchable source',
+      capacity: '1.1 MW',
+      state: 'Permitting',
     },
     {
       name: 'Clinic priority loop',
@@ -109,7 +142,61 @@ Your task: propose a way to deliver electricity that is both fast to deploy and 
     },
   ];
 
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
+  stormCards: StormCard[] = [
+    {
+      label: 'Command',
+      text: 'Prioritize clinic, school, cold-chain, and enterprise loads before household expansion.',
+      tone: 'command',
+    },
+    {
+      label: 'Domain event',
+      text: 'Village demand doubles after first productive-use appliances come online.',
+      tone: 'event',
+    },
+    {
+      label: 'Policy',
+      text: 'No electrochemical batteries: design for firming, scheduling, and maintainable redundancy.',
+      tone: 'policy',
+    },
+    {
+      label: 'Risk',
+      text: 'Long feeder repairs can isolate ridge settlements during monsoon access windows.',
+      tone: 'risk',
+    },
+    {
+      label: 'Domain event',
+      text: 'Local operator completes modular maintenance route and restores priority loop.',
+      tone: 'event',
+    },
+    {
+      label: 'Command',
+      text: 'Generate TRIZ alternatives for fast deployment without sacrificing growing load capacity.',
+      tone: 'command',
+    },
+  ];
+
+  rolloutSteps: TimelineStep[] = [
+    {
+      phase: 'Discover',
+      outcome: 'Map constraints, social load priorities, and terrain bottlenecks.',
+      owner: 'Field team',
+    },
+    {
+      phase: 'Storm',
+      outcome: 'Turn events, commands, policies, and risks into design options.',
+      owner: 'Facilitator',
+    },
+    {
+      phase: 'Solve',
+      outcome: 'Use TRIZ and SCAMPER to compare delivery strategies.',
+      owner: 'AI planner',
+    },
+    {
+      phase: 'Deploy',
+      outcome: 'Sequence modular assets, operator training, and reliability checks.',
+      owner: 'Implementation lead',
+    },
+  ];
 
   getAssistantText(res: any): string {
     if (res.result?.solutions?.length) {
@@ -144,7 +231,7 @@ Your task: propose a way to deliver electricity that is both fast to deploy and 
 
     this.messages.push({
       sender: 'assistant',
-      text: 'Welcome. Describe a problem, contradiction, product challenge, or process bottleneck. I will use TRIZ principles and SCAMPER variants to structure possible solutions.',
+      text: 'Welcome. Describe a rural electricity delivery contradiction, terrain constraint, load pattern, or maintenance bottleneck. I will use TRIZ principles and SCAMPER variants to structure possible solutions.',
       timestamp: new Date(),
     });
 
@@ -164,13 +251,13 @@ Your task: propose a way to deliver electricity that is both fast to deploy and 
     this.loadHistory();
   }
 
-  setView(view: 'overview' | 'planner' | 'history') {
+  setView(view: 'tool' | 'eventStorming') {
     this.activeView = view;
   }
 
   usePrompt(prompt: string) {
     this.userInput = prompt;
-    this.activeView = 'planner';
+    this.activeView = 'tool';
     setTimeout(() => {
       this.planningPrompt?.nativeElement.focus({ preventScroll: true });
     }, 0);
@@ -188,7 +275,7 @@ Your task: propose a way to deliver electricity that is both fast to deploy and 
     html = html.replace(/^## (.*$)/gim, '<h3 class="md-h3">$1</h3>');
     html = html.replace(/^# (.*$)/gim, '<h2 class="md-h2">$1</h2>');
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/^\s*[*\-]\s+(.*$)/gim, '<li class="md-li">$1</li>');
+    html = html.replace(/^\s*[*-]\s+(.*$)/gim, '<li class="md-li">$1</li>');
     html = html.replace(/\n/g, '<br>');
 
     return html;
@@ -200,7 +287,7 @@ Your task: propose a way to deliver electricity that is both fast to deploy and 
     const userText = this.userInput.trim();
     this.userInput = '';
     this.isLoading = true;
-    this.activeView = 'planner';
+    this.activeView = 'tool';
 
     this.messages = [
       ...this.messages,
