@@ -113,7 +113,7 @@ The MCP server exposes the TRIZ contradiction matrix tools.
 **1. Run Locally:**
 Open a terminal and start the server:
 ```bash
-cd mcp-server
+cd mcp-server-triz
 MCP_HOST=0.0.0.0 MCP_PORT=8000 uv run python app/main.py
 ```
 
@@ -127,12 +127,12 @@ curl -X POST http://localhost:8000/mcp -H "Content-Type: application/json" -H "A
 **3. Build Container Image (Cloud Build):**
 Compile and push *only* the TRIZ MCP server image in seconds:
 ```bash
-make build-mcp GCP_PROJECT=$GCP_PROJECT REGION=$REGION
+make build-mcp-triz GCP_PROJECT=$GCP_PROJECT REGION=$REGION
 ```
 
 **4. Deploy to GCP:**
 ```bash
-make deploy-mcp GCP_PROJECT=$GCP_PROJECT REGION=$REGION
+make deploy-mcp-triz GCP_PROJECT=$GCP_PROJECT REGION=$REGION
 ```
 
 ---
@@ -271,7 +271,7 @@ Now, we deploy the services in topological order (bottom-up), dynamically passin
 #### **A. Deploy TRIZ MCP Server (Public Tooling)**
 Deploy the Python-based TRIZ toolset to Cloud Run, allocated with 2GiB of memory to handle AI model loading:
 ```bash
-make deploy-mcp GCP_PROJECT=$GCP_PROJECT REGION=$REGION
+make deploy-mcp-triz GCP_PROJECT=$GCP_PROJECT REGION=$REGION
 ```
 
 #### **B. Deploy ADK Agent (Public Brain)**

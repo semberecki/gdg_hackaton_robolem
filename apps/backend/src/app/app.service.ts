@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { PrismaService } from './prisma.service';
-import { Prisma } from '@prisma/client';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
@@ -12,6 +11,90 @@ export class AppService {
     private readonly prisma: PrismaService,
     private readonly httpService: HttpService
   ) {}
+
+  private parseAgentJson(raw: string): any | null {
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+    const candidate = fenced ? fenced[1].trim() : trimmed;
+
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      const firstBrace = candidate.indexOf('{');
+      const lastBrace = candidate.lastIndexOf('}');
+      if (firstBrace === -1 || lastBrace <= firstBrace) {
+        return null;
+      }
+
+      try {
+        return JSON.parse(candidate.slice(firstBrace, lastBrace + 1));
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  private extractPrinciples(result: any): any[] {
+    const principles = result?.triz?.principles || result?.solutions;
+    if (!Array.isArray(principles)) {
+      return [];
+    }
+
+    return principles.map((principle: any) => ({
+      id: principle.id ?? principle.principleId ?? null,
+      name: principle.name ?? principle.principleName ?? '',
+      description: principle.description ?? principle.principleDescription ?? '',
+      solution: principle.solution ?? '',
+    }));
+  }
+
+  private normalizeResult(result: any): any | null {
+    if (!result || typeof result !== 'object') {
+      return result;
+    }
+
+    const principles = Array.isArray(result?.triz?.principles)
+      ? result.triz.principles
+      : [];
+    const flatModifications = Array.isArray(result?.scamper?.modifications)
+      ? result.scamper.modifications
+      : [];
+
+    if (!principles.length || result.solutions) {
+      return result;
+    }
+
+    const solutions = principles.map((principle: any, index: number) => {
+      const principleId = principle.id ?? null;
+      const principleName = principle.name ?? '';
+      const scamperVariants = flatModifications.filter((variant: any) => {
+        if (principleId !== null && variant.principleId === principleId) {
+          return true;
+        }
+        if (principleName && variant.principleName === principleName) {
+          return true;
+        }
+        return variant.solutionIndex === index;
+      });
+
+      return {
+        principleId,
+        principleName,
+        principleDescription: principle.description ?? '',
+        solution: principle.solution ?? '',
+        scamperVariants,
+      };
+    });
+
+    return {
+      ...result,
+      solutions,
+    };
+  }
 
   // ==========================================
   // Conversational Solving & Contradictions
@@ -39,6 +122,7 @@ export class AppService {
 
     let agentAdvice = '';
     let parsedPrinciples: any[] = [];
+    let structuredResult: any | null = null;
 
     try {
       // Automatically pre-initialize the session in the ADK agent if it does not exist
@@ -63,43 +147,16 @@ export class AppService {
 
         if (modelEvent && modelEvent.content?.parts?.[0]?.text) {
           agentAdvice = modelEvent.content.parts[0].text;
+          structuredResult = this.normalizeResult(this.parseAgentJson(agentAdvice));
 
-          // Clean, on-the-fly metadata parsing: check if the AI response mentioned any standard TRIZ principles!
-          // This allows us to keep the database logging simple, yet highly structured.
-          const lowerAdvice = agentAdvice.toLowerCase();
-          if (lowerAdvice.includes('principle 10') || lowerAdvice.includes('prior action')) {
-            parsedPrinciples.push({
-              id: 10,
-              name: 'Prior Action',
-              description: 'Perform the required change of an object before it is needed.',
-            });
-          }
-          if (lowerAdvice.includes('principle 2') || lowerAdvice.includes('taking out')) {
-            parsedPrinciples.push({
-              id: 2,
-              name: 'Taking Out',
-              description: 'Separate the troublesome part/property from the object.',
-            });
-          }
-          if (lowerAdvice.includes('principle 26') || lowerAdvice.includes('copying')) {
-            parsedPrinciples.push({
-              id: 26,
-              name: 'Copying',
-              description: 'Use a simpler/cheaper copy instead of an expensive/fragile object.',
-            });
-          }
-          if (lowerAdvice.includes('principle 35') || lowerAdvice.includes('parameter changes')) {
-            parsedPrinciples.push({
-              id: 35,
-              name: 'Parameter Changes',
-              description: 'Change physical state, concentration, density, temperature, or volume.',
-            });
-          }
+          parsedPrinciples = this.extractPrinciples(structuredResult);
         } else {
           agentAdvice = JSON.stringify(events);
+          structuredResult = this.normalizeResult(this.parseAgentJson(agentAdvice));
         }
       } else {
         agentAdvice = JSON.stringify(response.data);
+        structuredResult = this.normalizeResult(this.parseAgentJson(agentAdvice));
       }
     } catch (error: any) {
       console.error('Error invoking ADK agent:', error.message);
@@ -114,6 +171,7 @@ export class AppService {
       data: {
         problemDescription: dto.problemDescription,
         principles: parsedPrinciples.length > 0 ? parsedPrinciples : [],
+        result: structuredResult,
         advice: agentAdvice,
       },
     });

@@ -3,9 +3,9 @@ steps:
     args: [
       'build',
       '-f', 'apps/backend/Dockerfile',
-      '-t', 'us-central1-docker.pkg.dev/r2d2-00/buildwithai-repo/buildwithai-backend:latest',
+      '-t', 'us-central1-docker.pkg.dev/grand-citadel-501407-n4/buildwithai-repo/buildwithai-backend:latest',
       '.'
     ]
     env: ['DOCKER_BUILDKIT=1']
 images:
-  - 'us-central1-docker.pkg.dev/r2d2-00/buildwithai-repo/buildwithai-backend:latest'
+  - 'us-central1-docker.pkg.dev/grand-citadel-501407-n4/buildwithai-repo/buildwithai-backend:latest'

@@ -2,9 +2,9 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
-      '-t', 'us-central1-docker.pkg.dev/r2d2-00/buildwithai-repo/triz-adk-agent:latest',
+      '-t', 'us-central1-docker.pkg.dev/grand-citadel-501407-n4/buildwithai-repo/triz-adk-agent:latest',
       './adk-agents'
     ]
     env: ['DOCKER_BUILDKIT=1']
 images:
-  - 'us-central1-docker.pkg.dev/r2d2-00/buildwithai-repo/triz-adk-agent:latest'
+  - 'us-central1-docker.pkg.dev/grand-citadel-501407-n4/buildwithai-repo/triz-adk-agent:latest'
