@@ -115,7 +115,7 @@ Your task: propose a way to deliver electricity that is both fast to deploy and 
     if (res.result?.solutions?.length) {
       const solutionCount = res.result.solutions.length;
       const variantCount = this.getVariantCount(res.result);
-      return `I found ${solutionCount} TRIZ solution${solutionCount === 1 ? '' : 's'} and ${variantCount} SCAMPER variant${variantCount === 1 ? '' : 's'}. Review the grouped results below.`;
+      return `I found ${solutionCount} TRIZ principle group${solutionCount === 1 ? '' : 's'} and scored ${variantCount} variant${variantCount === 1 ? '' : 's'}, including base and SCAMPER options. Review the ranked results below.`;
     }
 
     return res.result?.summary || res.result?.finalRecommendations?.join('\n') || res.advice || '';
@@ -130,10 +130,15 @@ Your task: propose a way to deliver electricity that is both fast to deploy and 
   getVariantCount(result: any): number {
     return (
       result?.solutions?.reduce(
-        (total: number, solution: any) => total + (solution.scamperVariants?.length || 0),
+        (total: number, solution: any) => total + (solution.variants?.length || 0),
         0
       ) || 0
     );
+  }
+
+  getScoreWidth(variant: any): string {
+    const score = Math.max(0, Math.min(100, Number(variant?.score) || 0));
+    return `${score}%`;
   }
 
   ngOnInit() {
