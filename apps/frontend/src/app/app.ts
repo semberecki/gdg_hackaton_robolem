@@ -41,6 +41,13 @@ interface StormCard {
   tone: 'event' | 'command' | 'policy' | 'risk';
 }
 
+interface StormLane {
+  id: string;
+  title: string;
+  description: string;
+  cards: StormCard[];
+}
+
 interface TimelineStep {
   phase: string;
   outcome: string;
@@ -172,6 +179,67 @@ Your task: propose a way to deliver electricity that is both fast to deploy and 
       label: 'Command',
       text: 'Generate TRIZ alternatives for fast deployment without sacrificing growing load capacity.',
       tone: 'command',
+    },
+  ];
+
+  stormLanes: StormLane[] = [
+    {
+      id: '01',
+      title: 'Events',
+      description: 'What happened in the rural electricity system?',
+      cards: [
+        {
+          label: 'Domain Event',
+          text: 'Village demand doubles after productive-use appliances come online.',
+          tone: 'event',
+        },
+        {
+          label: 'Domain Event',
+          text: 'Local operator restores the priority loop after modular maintenance.',
+          tone: 'event',
+        },
+      ],
+    },
+    {
+      id: '02',
+      title: 'Commands',
+      description: 'What decisions or actions trigger change?',
+      cards: [
+        {
+          label: 'Command',
+          text: 'Prioritize clinic, school, cold-chain, and enterprise loads before household expansion.',
+          tone: 'command',
+        },
+        {
+          label: 'Command',
+          text: 'Generate TRIZ alternatives for fast deployment without sacrificing capacity.',
+          tone: 'command',
+        },
+      ],
+    },
+    {
+      id: '03',
+      title: 'Policies',
+      description: 'Which constraints shape the solution?',
+      cards: [
+        {
+          label: 'Policy',
+          text: 'No electrochemical batteries: use firming, scheduling, and maintainable redundancy.',
+          tone: 'policy',
+        },
+      ],
+    },
+    {
+      id: '04',
+      title: 'Risks',
+      description: 'Where can the system fail?',
+      cards: [
+        {
+          label: 'Risk',
+          text: 'Long feeder repairs can isolate ridge settlements during monsoon access windows.',
+          tone: 'risk',
+        },
+      ],
     },
   ];
 

@@ -33,6 +33,12 @@ button:disabled {
   opacity: 0.55;
 }
 
+button:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
 .app-shell {
   min-height: 100vh;
   background:
@@ -333,37 +339,82 @@ textarea:focus {
   line-height: 1.6;
 }
 
-.storm-board {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+.storm-pipeline {
+  margin-top: 0;
+}
+
+.event-intro {
   border: 1px solid var(--line);
-  background: rgba(226, 234, 245, 0.45);
-  padding: 22px;
+  background: rgba(226, 234, 245, 0.55);
+  padding: 18px 20px;
+}
+
+.event-intro p:last-child {
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.storm-board,
+.storm-card-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.storm-board {
+  grid-template-columns: 1fr;
+}
+
+.storm-lane {
+  border: 1px solid var(--line);
+  background: rgba(226, 234, 245, 0.48);
+  padding: 18px;
+}
+
+.storm-lane header {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 14px;
+  align-items: start;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+}
+
+.storm-lane header > span {
+  display: grid;
+  min-height: 36px;
+  place-items: center;
+  border: 1px solid var(--line);
+  color: var(--blue-dark);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.storm-lane h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.storm-lane header p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 .storm-card {
-  min-height: 150px;
-  border: 1px solid rgba(16, 24, 39, 0.16);
+  border: 1px solid var(--line);
+  background: rgba(235, 241, 249, 0.76);
   padding: 16px;
-  background: #f6c365;
-  box-shadow: 8px 8px 0 rgba(16, 24, 39, 0.08);
-}
-
-.storm-card.command {
-  background: #8fc8ee;
-}
-
-.storm-card.policy {
-  background: #a9ddb7;
-}
-
-.storm-card.risk {
-  background: #ee937f;
 }
 
 .storm-card span {
-  color: rgba(16, 24, 39, 0.62);
+  color: var(--blue-dark);
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.18em;
@@ -371,10 +422,9 @@ textarea:focus {
 }
 
 .storm-card p {
-  margin: 12px 0 0;
-  color: #111827;
-  font-weight: 800;
-  line-height: 1.42;
+  margin: 8px 0 0;
+  color: #27384e;
+  line-height: 1.55;
 }
 
 .md-h2,

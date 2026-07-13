@@ -82,17 +82,49 @@
 
     <section *ngIf="activeView === 'eventStorming'" class="event-page">
       <section class="hero compact">
-        <p class="overline"><span></span> Collaborative Discovery</p>
+        <p class="overline"><span></span> Event Storming Workshop</p>
         <h1>Event Storming</h1>
-        <p class="subtitle">Map the rural electricity problem before running the AI solution pipeline.</p>
+        <p class="subtitle">Map domain events, commands, policies, and risks before running the AI pipeline.</p>
       </section>
 
-      <section class="storm-board">
-        <article *ngFor="let card of stormCards" class="storm-card" [ngClass]="card.tone">
-          <span>{{ card.label }}</span>
-          <p>{{ card.text }}</p>
+      <ol class="pipeline storm-pipeline" aria-label="Event storming pipeline">
+        <li *ngFor="let lane of stormLanes">
+          <span>{{ lane.id }}</span>
+          <strong>{{ lane.title }}</strong>
+        </li>
+      </ol>
+
+      <section class="event-intro">
+        <p class="section-label">Workshop Canvas</p>
+        <p>
+          Start from what happens in the field, then connect decisions and constraints. Use this map as the
+          shared context for the TRIZ + SCAMPER + LLM judge flow.
+        </p>
+      </section>
+
+      <section class="storm-board" aria-label="Event storming board">
+        <article *ngFor="let lane of stormLanes" class="storm-lane">
+          <header>
+            <span>{{ lane.id }}</span>
+            <div>
+              <h2>{{ lane.title }}</h2>
+              <p>{{ lane.description }}</p>
+            </div>
+          </header>
+
+          <div class="storm-card-stack">
+            <article *ngFor="let card of lane.cards" class="storm-card" [ngClass]="card.tone">
+              <span>{{ card.label }}</span>
+              <p>{{ card.text }}</p>
+            </article>
+          </div>
         </article>
       </section>
+
+      <div class="action-row">
+        <button type="button" class="primary-action" (click)="usePrompt(sdg7Prompt)">Send map to pipeline</button>
+        <p>Events > Commands > Policies > Risks > Tool</p>
+      </div>
     </section>
   </main>
 </div>
